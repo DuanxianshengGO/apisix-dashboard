@@ -40,7 +40,7 @@ COPY web/ ./
         export NODE_ENV=production && \
         export GENERATE_SOURCEMAP=false && \
         cp -R ./node_modules/monaco-editor ./public/ && \
-        node --openssl-legacy-provider --max_old_space_size=8192 ./node_modules/.bin/umi build
+        node --max_old_space_size=8192 ./node_modules/.bin/umi build
 
 # Stage 2: Build backend API
 FROM golang:1.19-alpine as api-builder
