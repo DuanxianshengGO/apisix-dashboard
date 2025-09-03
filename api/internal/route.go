@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	// "github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -28,6 +27,7 @@ import (
 	"github.com/apisix/manager-api/internal/conf"
 	"github.com/apisix/manager-api/internal/filter"
 	"github.com/apisix/manager-api/internal/handler"
+	"github.com/apisix/manager-api/internal/handler/audit"
 	"github.com/apisix/manager-api/internal/handler/authentication"
 	"github.com/apisix/manager-api/internal/handler/consumer"
 	"github.com/apisix/manager-api/internal/handler/data_loader"
@@ -37,6 +37,7 @@ import (
 	"github.com/apisix/manager-api/internal/handler/migrate"
 	"github.com/apisix/manager-api/internal/handler/plugin_config"
 	"github.com/apisix/manager-api/internal/handler/proto"
+	"github.com/apisix/manager-api/internal/handler/role"
 	"github.com/apisix/manager-api/internal/handler/route"
 	"github.com/apisix/manager-api/internal/handler/schema"
 	"github.com/apisix/manager-api/internal/handler/server_info"
@@ -46,6 +47,7 @@ import (
 	"github.com/apisix/manager-api/internal/handler/system_config"
 	"github.com/apisix/manager-api/internal/handler/tool"
 	"github.com/apisix/manager-api/internal/handler/upstream"
+	"github.com/apisix/manager-api/internal/handler/user"
 	"github.com/apisix/manager-api/internal/log"
 )
 
@@ -68,15 +70,14 @@ func SetUpRouter() *gin.Engine {
 	})
 
 	factories := []handler.RegisterFactory{
+		healthz.NewHandler,
+		schema.NewHandler,
+		authentication.NewHandler,
 		route.NewHandler,
 		ssl.NewHandler,
 		consumer.NewHandler,
 		upstream.NewHandler,
 		service.NewHandler,
-		schema.NewHandler,
-		schema.NewSchemaHandler,
-		healthz.NewHandler,
-		authentication.NewHandler,
 		global_rule.NewHandler,
 		server_info.NewHandler,
 		label.NewHandler,
@@ -88,6 +89,9 @@ func SetUpRouter() *gin.Engine {
 		proto.NewHandler,
 		stream_route.NewHandler,
 		system_config.NewHandler,
+		user.NewHandler,
+		role.NewHandler,
+		audit.NewHandler,
 	}
 
 	for i := range factories {

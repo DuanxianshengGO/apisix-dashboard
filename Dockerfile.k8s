@@ -1,0 +1,126 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Stage 1: Build frontend
+FROM node:16-alpine as fe-builder
+
+WORKDIR /app/web
+
+# Copy package files first for better caching
+COPY web/package.json web/yarn.lock ./
+
+# Install dependencies with SSL verification disabled
+RUN yarn config set strict-ssl false && \
+    yarn install --frozen-lockfile
+
+# Copy frontend source code
+COPY web/ ./
+
+# Build frontend with legacy OpenSSL provider for Node.js compatibility
+RUN export NODE_OPTIONS="--openssl-legacy-provider" && \
+    yarn build
+
+# Stage 2: Build backend API
+FROM golang:1.19-alpine as api-builder
+
+WORKDIR /app/api
+
+# Install build dependencies
+RUN apk add --no-cache git make
+
+# Copy go mod files first for better caching
+COPY api/go.mod api/go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy API source code
+COPY api/ ./
+
+# Build the API binary
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o manager-api ./main.go
+
+# Stage 3: Production runtime with nginx
+FROM nginx:alpine as runtime
+
+# Install supervisor to manage multiple processes
+RUN apk add --no-cache supervisor
+
+# Create application directory
+WORKDIR /usr/local/apisix-dashboard
+
+# Copy built API binary
+COPY --from=api-builder /app/api/manager-api ./
+
+# Copy built frontend files
+COPY --from=fe-builder /app/web/dist ./web/dist
+
+# Copy API configuration
+COPY api/conf/ ./conf/
+
+# Create logs directory
+RUN mkdir -p logs
+
+# Create nginx configuration for serving frontend and proxying API
+RUN cat > /etc/nginx/conf.d/default.conf << 'EOF'
+server {
+    listen 80;
+    server_name localhost;
+    
+    # Serve frontend static files
+    location / {
+        root /usr/local/apisix-dashboard/web/dist;
+        try_files $uri $uri/ /index.html;
+        index index.html;
+    }
+    
+    # Proxy API requests to backend
+    location /apisix/ {
+        proxy_pass http://127.0.0.1:9000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+
+# Create supervisor configuration
+RUN cat > /etc/supervisor/conf.d/supervisord.conf << 'EOF'
+[supervisord]
+nodaemon=true
+user=root
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autorestart=true
+stdout_logfile=/var/log/nginx.log
+stderr_logfile=/var/log/nginx.log
+
+[program:apisix-dashboard]
+command=/usr/local/apisix-dashboard/manager-api
+directory=/usr/local/apisix-dashboard
+autorestart=true
+stdout_logfile=/usr/local/apisix-dashboard/logs/manager-api.log
+stderr_logfile=/usr/local/apisix-dashboard/logs/manager-api.log
+EOF
+
+# Expose ports
+EXPOSE 80 9000
+
+# Start supervisor to manage both nginx and API
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

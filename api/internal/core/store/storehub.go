@@ -41,6 +41,13 @@ const (
 	HubKeyProto        HubKey = "proto"
 	HubKeyStreamRoute  HubKey = "stream_route"
 	HubKeySystemConfig HubKey = "system_config"
+	HubKeyUser         HubKey = "user"
+	HubKeyRole         HubKey = "role"
+	HubKeyPermission   HubKey = "permission"
+	HubKeyUserRole     HubKey = "user_role"
+	HubKeyRolePermission HubKey = "role_permission"
+	HubKeyAuditLog     HubKey = "audit_log"
+	HubKeyAuditConfig  HubKey = "audit_config"
 )
 
 var (
@@ -238,6 +245,89 @@ func InitStores() error {
 		KeyFunc: func(obj interface{}) string {
 			r := obj.(*entity.SystemConfig)
 			return r.ConfigName
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = InitStore(HubKeyUser, GenericStoreOption{
+		BasePath: conf.ETCDConfig.Prefix + "/users",
+		ObjType:  reflect.TypeOf(entity.User{}),
+		KeyFunc: func(obj interface{}) string {
+			r := obj.(*entity.User)
+			return utils.InterfaceToString(r.ID)
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = InitStore(HubKeyRole, GenericStoreOption{
+		BasePath: conf.ETCDConfig.Prefix + "/roles",
+		ObjType:  reflect.TypeOf(entity.Role{}),
+		KeyFunc: func(obj interface{}) string {
+			r := obj.(*entity.Role)
+			return utils.InterfaceToString(r.ID)
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = InitStore(HubKeyPermission, GenericStoreOption{
+		BasePath: conf.ETCDConfig.Prefix + "/permissions",
+		ObjType:  reflect.TypeOf(entity.Permission{}),
+		KeyFunc: func(obj interface{}) string {
+			r := obj.(*entity.Permission)
+			return utils.InterfaceToString(r.ID)
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = InitStore(HubKeyUserRole, GenericStoreOption{
+		BasePath: conf.ETCDConfig.Prefix + "/user_roles",
+		ObjType:  reflect.TypeOf(entity.UserRole{}),
+		KeyFunc: func(obj interface{}) string {
+			r := obj.(*entity.UserRole)
+			return r.UserID + "_" + r.RoleID
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = InitStore(HubKeyRolePermission, GenericStoreOption{
+		BasePath: conf.ETCDConfig.Prefix + "/role_permissions",
+		ObjType:  reflect.TypeOf(entity.RolePermission{}),
+		KeyFunc: func(obj interface{}) string {
+			r := obj.(*entity.RolePermission)
+			return r.RoleID + "_" + r.PermissionID
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = InitStore(HubKeyAuditLog, GenericStoreOption{
+		BasePath: conf.ETCDConfig.Prefix + "/audit_logs",
+		ObjType:  reflect.TypeOf(entity.AuditLog{}),
+		KeyFunc: func(obj interface{}) string {
+			r := obj.(*entity.AuditLog)
+			return utils.InterfaceToString(r.ID)
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = InitStore(HubKeyAuditConfig, GenericStoreOption{
+		BasePath: conf.ETCDConfig.Prefix + "/audit_config",
+		ObjType:  reflect.TypeOf(entity.AuditConfig{}),
+		KeyFunc: func(obj interface{}) string {
+			return "audit_config"
 		},
 	})
 	if err != nil {

@@ -1,1 +1,60 @@
+# Node.js
 **/node_modules
+web/dist/
+web/.umi/
+web/.umi-production/
+web/cypress/
+web/coverage/
+
+# Git
+.git
+.gitignore
+.gitmodules
+
+# Documentation
+*.md
+README*
+CHANGELOG*
+docs/
+licenses/
+
+# CI/CD
+.github/
+.actions/
+.vscode/
+
+# Go
+api/logs/
+api/output/
+api/vendor/
+
+# Build artifacts
+*.log
+*.tmp
+*.temp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Test
+test/
+cypress/
+*.test
+
+# Docker
+Dockerfile
+docker-compose*
+
+# Other
+.yamllint
+.markdownlint.yml
+.asf.yaml
+netlify.toml
+Makefile
