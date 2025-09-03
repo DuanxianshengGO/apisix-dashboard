@@ -62,6 +62,9 @@ docker build -f Dockerfile.k8s \
     -t "${TAGGED_IMAGE}" \
     -t "${LATEST_IMAGE}" \
     --build-arg APISIX_DASHBOARD_VERSION="$(git rev-parse --short HEAD)" \
+    --build-arg GOPROXY=https://goproxy.cn,https://goproxy.io,https://mirrors.aliyun.com/goproxy/,direct \
+    --build-arg GOSUMDB=off \
+    --build-arg GOINSECURE="*" \
     .
 
 if [ $? -eq 0 ]; then

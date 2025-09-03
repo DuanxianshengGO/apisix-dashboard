@@ -78,6 +78,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
             APISIX_DASHBOARD_VERSION=${{ steps.meta.outputs.short_sha }}
+            GOPROXY=https://goproxy.cn,https://goproxy.io,https://mirrors.aliyun.com/goproxy/,direct
+            GOSUMDB=off
+            GOINSECURE=*
           cache-from: |
             type=local,src=/tmp/.buildx-cache
           cache-to: |
