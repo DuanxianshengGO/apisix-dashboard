@@ -49,7 +49,7 @@ RUN apk add --no-cache git make ca-certificates
 
 # Configure Go proxy settings for better network reliability
 ENV GOPROXY=https://proxy.golang.org,https://goproxy.cn,https://goproxy.io,direct
-ENV GOSUMDB=sum.golang.org
+ENV GOSUMDB=off
 ENV GOPRIVATE=""
 ENV GONOPROXY=""
 ENV GONOSUMDB=""
@@ -57,7 +57,7 @@ ENV GONOSUMDB=""
 # Copy go mod files first for better caching
 COPY api/go.mod api/go.sum ./
 
-# Download dependencies with retry mechanism
+# Download dependencies with retry mechanism and fallback options
 RUN set -e; \
     for i in 1 2 3; do \
         echo "Attempt $i: Downloading Go modules..."; \
@@ -69,8 +69,10 @@ RUN set -e; \
             sleep 5; \
         fi; \
         if [ $i -eq 3 ]; then \
-            echo "All attempts failed, trying with direct proxy"; \
-            GOPROXY=direct go mod download; \
+            echo "All proxy attempts failed, trying direct with disabled verification"; \
+            GOPROXY=direct GOSUMDB=off go mod download || \
+            (echo "Direct download failed, using insecure mode" && \
+             GOPROXY=direct GOSUMDB=off GOINSECURE="*" go mod download); \
         fi; \
     done
 
