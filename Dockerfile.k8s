@@ -35,11 +35,12 @@ RUN yarn config set strict-ssl false && \
 COPY web/ ./
 
 # Build frontend with optimized Node.js settings and increased memory
-RUN export NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=8192 --max-semi-space-size=1024" && \
-    export CI=false && \
-    export NODE_ENV=production && \
-    export GENERATE_SOURCEMAP=false && \
-    yarn build --max_old_space_size=8192
+    RUN export NODE_OPTIONS="--max-old-space-size=8192 --max-semi-space-size=1024" && \
+        export CI=false && \
+        export NODE_ENV=production && \
+        export GENERATE_SOURCEMAP=false && \
+        cp -R ./node_modules/monaco-editor ./public/ && \
+        node --openssl-legacy-provider --max_old_space_size=8192 ./node_modules/.bin/umi build
 
 # Stage 2: Build backend API
 FROM golang:1.19-alpine as api-builder
