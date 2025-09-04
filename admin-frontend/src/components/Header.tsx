@@ -1,14 +1,20 @@
 import React from 'react'
-import { Layout, Avatar, Dropdown, Space } from 'antd'
+import { Layout, Avatar, Dropdown, Space, message } from 'antd'
 import { UserOutlined, LogoutOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import type { MenuProps } from 'antd'
+import { useAuth } from '../contexts/AuthContext'
 
 const { Header: AntHeader } = Layout
 
 const Header: React.FC = () => {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
   const handleLogout = () => {
-    // 处理登出逻辑
-    console.log('用户登出')
+    logout()
+    message.success('已退出登录')
+    navigate('/login')
   }
 
   const items: MenuProps['items'] = [
@@ -23,11 +29,11 @@ const Header: React.FC = () => {
   return (
     <AntHeader style={{ background: '#fff', padding: '0 24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>后台管理系统</h2>
+        <h2 style={{ margin: 0 }}>APISIX 后台管理系统</h2>
         <Dropdown menu={{ items }} placement="bottomRight">
           <Space style={{ cursor: 'pointer' }}>
             <Avatar icon={<UserOutlined />} />
-            <span>管理员</span>
+            <span>{user?.username || '管理员'}</span>
           </Space>
         </Dropdown>
       </div>
