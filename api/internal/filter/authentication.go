@@ -24,6 +24,8 @@ import (
 	"github.com/golang-jwt/jwt"
 
 	"github.com/apisix/manager-api/internal/conf"
+	"github.com/apisix/manager-api/internal/core/entity"
+	"github.com/apisix/manager-api/internal/core/store"
 	"github.com/apisix/manager-api/internal/log"
 )
 
@@ -37,6 +39,10 @@ func Authentication() gin.HandlerFunc {
 		}
 
 		tokenStr := c.GetHeader("Authorization")
+		// Remove Bearer prefix if present
+		if strings.HasPrefix(tokenStr, "Bearer ") {
+			tokenStr = strings.TrimPrefix(tokenStr, "Bearer ")
+		}
 		// verify token
 		token, err := jwt.ParseWithClaims(tokenStr, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(conf.AuthConf.Secret), nil
@@ -72,10 +78,27 @@ func Authentication() gin.HandlerFunc {
 			return
 		}
 
+		// Check if user exists in config file first (backward compatibility)
 		if _, ok := conf.UserList[claims.Subject]; !ok {
-			log.Warnf("user not exists by token claims subject %s", claims.Subject)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, errResp)
-			return
+			// If not in config, check database
+			userStore := store.GetStore(store.HubKeyUser)
+			ret, err := userStore.List(c.Request.Context(), store.ListInput{
+				Predicate: func(obj interface{}) bool {
+					user := obj.(*entity.User)
+					return user.Username == claims.Subject
+				},
+			})
+			if err != nil || len(ret.Rows) == 0 {
+				log.Warnf("user not exists by token claims subject %s", claims.Subject)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, errResp)
+				return
+			}
+			// Set userID in context for RBAC
+			user := ret.Rows[0].(*entity.User)
+			c.Set("userID", user.ID)
+		} else {
+			// For config-based users, use username as userID
+			c.Set("userID", claims.Subject)
 		}
 
 		c.Next()

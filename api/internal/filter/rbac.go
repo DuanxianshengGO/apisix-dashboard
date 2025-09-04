@@ -24,6 +24,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shiningrush/droplet/data"
 
+	"github.com/apisix/manager-api/internal/conf"
 	"github.com/apisix/manager-api/internal/core/entity"
 	"github.com/apisix/manager-api/internal/core/store"
 	"github.com/apisix/manager-api/internal/log"
@@ -138,7 +139,15 @@ func (f *RBACFilter) RequireResourcePermission(resource, action string) gin.Hand
 
 // checkUserPermission checks if a user has a specific permission
 func (f *RBACFilter) checkUserPermission(ctx context.Context, userID, resource, action, resourceID string) (bool, error) {
-	// Get user roles
+	// Check if user is from config file (super admin)
+	for username := range conf.UserList {
+		if userID == username {
+			// Config users have all permissions
+			return true, nil
+		}
+	}
+
+	// Get user roles from database
 	userRoles, err := f.getUserRoles(ctx, userID)
 	if err != nil {
 		return false, err

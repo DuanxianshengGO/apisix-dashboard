@@ -29,13 +29,15 @@ import (
 
 	"github.com/apisix/manager-api/internal/core/entity"
 	"github.com/apisix/manager-api/internal/core/store"
+	"github.com/apisix/manager-api/internal/filter"
 	"github.com/apisix/manager-api/internal/handler"
 )
 
 type Handler struct {
-	userStore store.Interface
-	roleStore store.Interface
+	userStore  store.Interface
+	roleStore  store.Interface
 	auditStore store.Interface
+	rbacFilter *filter.RBACFilter
 }
 
 func NewHandler() (handler.RouteRegister, error) {
@@ -43,24 +45,25 @@ func NewHandler() (handler.RouteRegister, error) {
 		userStore:  store.GetStore(store.HubKeyUser),
 		roleStore:  store.GetStore(store.HubKeyRole),
 		auditStore: store.GetStore(store.HubKeyAuditLog),
+		rbacFilter: filter.NewRBACFilter(),
 	}, nil
 }
 
 func (h *Handler) ApplyRoute(r *gin.Engine) {
-	// User management routes
-	r.GET("/apisix/admin/users/:id", wgin.Wraps(h.Get,
+	// User management routes with RBAC
+	r.GET("/apisix/admin/users/:id", h.rbacFilter.RequirePermission("user", "read"), wgin.Wraps(h.Get,
 		wrapper.InputType(reflect.TypeOf(GetInput{}))))
-	r.GET("/apisix/admin/users", wgin.Wraps(h.List,
+	r.GET("/apisix/admin/users", h.rbacFilter.RequirePermission("user", "list"), wgin.Wraps(h.List,
 		wrapper.InputType(reflect.TypeOf(ListInput{}))))
-	r.POST("/apisix/admin/users", wgin.Wraps(h.Create,
+	r.POST("/apisix/admin/users", h.rbacFilter.RequirePermission("user", "create"), wgin.Wraps(h.Create,
 		wrapper.InputType(reflect.TypeOf(CreateInput{}))))
-	r.PUT("/apisix/admin/users/:id", wgin.Wraps(h.Update,
+	r.PUT("/apisix/admin/users/:id", h.rbacFilter.RequirePermission("user", "update"), wgin.Wraps(h.Update,
 		wrapper.InputType(reflect.TypeOf(UpdateInput{}))))
-	r.DELETE("/apisix/admin/users/:ids", wgin.Wraps(h.BatchDelete,
+	r.DELETE("/apisix/admin/users/:ids", h.rbacFilter.RequirePermission("user", "delete"), wgin.Wraps(h.BatchDelete,
 		wrapper.InputType(reflect.TypeOf(BatchDeleteInput{}))))
-	r.POST("/apisix/admin/users/:id/change-password", wgin.Wraps(h.ChangePassword,
+	r.POST("/apisix/admin/users/:id/change-password", h.rbacFilter.RequirePermission("user", "update"), wgin.Wraps(h.ChangePassword,
 		wrapper.InputType(reflect.TypeOf(ChangePasswordInput{}))))
-	r.POST("/apisix/admin/users/:id/reset-password", wgin.Wraps(h.ResetPassword,
+	r.POST("/apisix/admin/users/:id/reset-password", h.rbacFilter.RequirePermission("user", "update"), wgin.Wraps(h.ResetPassword,
 		wrapper.InputType(reflect.TypeOf(ResetPasswordInput{}))))
 }
 

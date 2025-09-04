@@ -31,6 +31,7 @@ import (
 
 	"github.com/apisix/manager-api/internal/core/entity"
 	"github.com/apisix/manager-api/internal/core/store"
+	"github.com/apisix/manager-api/internal/filter"
 	"github.com/apisix/manager-api/internal/handler"
 	"github.com/apisix/manager-api/internal/utils"
 	"github.com/apisix/manager-api/internal/utils/consts"
@@ -41,6 +42,7 @@ type Handler struct {
 	routeStore       store.Interface
 	serviceStore     store.Interface
 	streamRouteStore store.Interface
+	rbacFilter       *filter.RBACFilter
 }
 
 func NewHandler() (handler.RouteRegister, error) {
@@ -49,31 +51,32 @@ func NewHandler() (handler.RouteRegister, error) {
 		routeStore:       store.GetStore(store.HubKeyRoute),
 		serviceStore:     store.GetStore(store.HubKeyService),
 		streamRouteStore: store.GetStore(store.HubKeyStreamRoute),
+		rbacFilter:       filter.NewRBACFilter(),
 	}, nil
 }
 
 func (h *Handler) ApplyRoute(r *gin.Engine) {
-	r.GET("/apisix/admin/upstreams/:id", wgin.Wraps(h.Get,
+	r.GET("/apisix/admin/upstreams/:id", h.rbacFilter.RequirePermission("upstream", "read"), wgin.Wraps(h.Get,
 		wrapper.InputType(reflect.TypeOf(GetInput{}))))
-	r.GET("/apisix/admin/upstreams", wgin.Wraps(h.List,
+	r.GET("/apisix/admin/upstreams", h.rbacFilter.RequirePermission("upstream", "list"), wgin.Wraps(h.List,
 		wrapper.InputType(reflect.TypeOf(ListInput{}))))
-	r.POST("/apisix/admin/upstreams", wgin.Wraps(h.Create,
+	r.POST("/apisix/admin/upstreams", h.rbacFilter.RequirePermission("upstream", "create"), wgin.Wraps(h.Create,
 		wrapper.InputType(reflect.TypeOf(entity.Upstream{}))))
-	r.PUT("/apisix/admin/upstreams", wgin.Wraps(h.Update,
+	r.PUT("/apisix/admin/upstreams", h.rbacFilter.RequirePermission("upstream", "update"), wgin.Wraps(h.Update,
 		wrapper.InputType(reflect.TypeOf(UpdateInput{}))))
-	r.PUT("/apisix/admin/upstreams/:id", wgin.Wraps(h.Update,
+	r.PUT("/apisix/admin/upstreams/:id", h.rbacFilter.RequirePermission("upstream", "update"), wgin.Wraps(h.Update,
 		wrapper.InputType(reflect.TypeOf(UpdateInput{}))))
-	r.PATCH("/apisix/admin/upstreams/:id", wgin.Wraps(h.Patch,
+	r.PATCH("/apisix/admin/upstreams/:id", h.rbacFilter.RequirePermission("upstream", "update"), wgin.Wraps(h.Patch,
 		wrapper.InputType(reflect.TypeOf(PatchInput{}))))
-	r.PATCH("/apisix/admin/upstreams/:id/*path", wgin.Wraps(h.Patch,
+	r.PATCH("/apisix/admin/upstreams/:id/*path", h.rbacFilter.RequirePermission("upstream", "update"), wgin.Wraps(h.Patch,
 		wrapper.InputType(reflect.TypeOf(PatchInput{}))))
-	r.DELETE("/apisix/admin/upstreams/:ids", wgin.Wraps(h.BatchDelete,
+	r.DELETE("/apisix/admin/upstreams/:ids", h.rbacFilter.RequirePermission("upstream", "delete"), wgin.Wraps(h.BatchDelete,
 		wrapper.InputType(reflect.TypeOf(BatchDelete{}))))
 
-	r.GET("/apisix/admin/notexist/upstreams", wgin.Wraps(h.Exist,
+	r.GET("/apisix/admin/notexist/upstreams", h.rbacFilter.RequirePermission("upstream", "read"), wgin.Wraps(h.Exist,
 		wrapper.InputType(reflect.TypeOf(ExistCheckInput{}))))
 
-	r.GET("/apisix/admin/names/upstreams", wgin.Wraps(h.listUpstreamNames))
+	r.GET("/apisix/admin/names/upstreams", h.rbacFilter.RequirePermission("upstream", "list"), wgin.Wraps(h.listUpstreamNames))
 }
 
 type GetInput struct {

@@ -31,6 +31,7 @@ import (
 
 	"github.com/apisix/manager-api/internal/core/entity"
 	"github.com/apisix/manager-api/internal/core/store"
+	"github.com/apisix/manager-api/internal/filter"
 	"github.com/apisix/manager-api/internal/handler"
 	"github.com/apisix/manager-api/internal/utils"
 )
@@ -39,6 +40,7 @@ type Handler struct {
 	serviceStore  store.Interface
 	upstreamStore store.Interface
 	routeStore    store.Interface
+	rbacFilter    *filter.RBACFilter
 }
 
 func NewHandler() (handler.RouteRegister, error) {
@@ -46,25 +48,26 @@ func NewHandler() (handler.RouteRegister, error) {
 		serviceStore:  store.GetStore(store.HubKeyService),
 		upstreamStore: store.GetStore(store.HubKeyUpstream),
 		routeStore:    store.GetStore(store.HubKeyRoute),
+		rbacFilter:    filter.NewRBACFilter(),
 	}, nil
 }
 
 func (h *Handler) ApplyRoute(r *gin.Engine) {
-	r.GET("/apisix/admin/services/:id", wgin.Wraps(h.Get,
+	r.GET("/apisix/admin/services/:id", h.rbacFilter.RequirePermission("service", "read"), wgin.Wraps(h.Get,
 		wrapper.InputType(reflect.TypeOf(GetInput{}))))
-	r.GET("/apisix/admin/services", wgin.Wraps(h.List,
+	r.GET("/apisix/admin/services", h.rbacFilter.RequirePermission("service", "list"), wgin.Wraps(h.List,
 		wrapper.InputType(reflect.TypeOf(ListInput{}))))
-	r.POST("/apisix/admin/services", wgin.Wraps(h.Create,
+	r.POST("/apisix/admin/services", h.rbacFilter.RequirePermission("service", "create"), wgin.Wraps(h.Create,
 		wrapper.InputType(reflect.TypeOf(entity.Service{}))))
-	r.PUT("/apisix/admin/services", wgin.Wraps(h.Update,
+	r.PUT("/apisix/admin/services", h.rbacFilter.RequirePermission("service", "update"), wgin.Wraps(h.Update,
 		wrapper.InputType(reflect.TypeOf(UpdateInput{}))))
-	r.PUT("/apisix/admin/services/:id", wgin.Wraps(h.Update,
+	r.PUT("/apisix/admin/services/:id", h.rbacFilter.RequirePermission("service", "update"), wgin.Wraps(h.Update,
 		wrapper.InputType(reflect.TypeOf(UpdateInput{}))))
-	r.PATCH("/apisix/admin/services/:id", wgin.Wraps(h.Patch,
+	r.PATCH("/apisix/admin/services/:id", h.rbacFilter.RequirePermission("service", "update"), wgin.Wraps(h.Patch,
 		wrapper.InputType(reflect.TypeOf(PatchInput{}))))
-	r.PATCH("/apisix/admin/services/:id/*path", wgin.Wraps(h.Patch,
+	r.PATCH("/apisix/admin/services/:id/*path", h.rbacFilter.RequirePermission("service", "update"), wgin.Wraps(h.Patch,
 		wrapper.InputType(reflect.TypeOf(PatchInput{}))))
-	r.DELETE("/apisix/admin/services/:ids", wgin.Wraps(h.BatchDelete,
+	r.DELETE("/apisix/admin/services/:ids", h.rbacFilter.RequirePermission("service", "delete"), wgin.Wraps(h.BatchDelete,
 		wrapper.InputType(reflect.TypeOf(BatchDelete{}))))
 }
 

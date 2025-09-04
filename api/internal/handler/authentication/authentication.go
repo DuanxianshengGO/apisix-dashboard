@@ -27,15 +27,20 @@ import (
 	wgin "github.com/shiningrush/droplet/wrapper/gin"
 
 	"github.com/apisix/manager-api/internal/conf"
+	"github.com/apisix/manager-api/internal/core/entity"
+	"github.com/apisix/manager-api/internal/core/store"
 	"github.com/apisix/manager-api/internal/handler"
 	"github.com/apisix/manager-api/internal/utils/consts"
 )
 
 type Handler struct {
+	userStore store.Interface
 }
 
 func NewHandler() (handler.RouteRegister, error) {
-	return &Handler{}, nil
+	return &Handler{
+		userStore: store.GetStore(store.HubKeyUser),
+	}, nil
 }
 
 func (h *Handler) ApplyRoute(r *gin.Engine) {
@@ -87,8 +92,46 @@ func (h *Handler) userLogin(c droplet.Context) (interface{}, error) {
 	username := input.Username
 	password := input.Password
 
-	user := conf.UserList[username]
-	if username != user.Username || password != user.Password {
+	// First try config-based users for backward compatibility
+	if configUser, exists := conf.UserList[username]; exists {
+		if username == configUser.Username && password == configUser.Password {
+			// create JWT for session
+			claims := jwt.StandardClaims{
+				Subject:   username,
+				IssuedAt:  time.Now().Unix(),
+				ExpiresAt: time.Now().Add(time.Second * time.Duration(conf.AuthConf.ExpireTime)).Unix(),
+			}
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+			signedToken, _ := token.SignedString([]byte(conf.AuthConf.Secret))
+
+			return &UserSession{
+				Token: signedToken,
+			}, nil
+		}
+	}
+
+	// Try database users
+	var foundUser *entity.User
+	userList, err := h.userStore.List(c.Context(), store.ListInput{
+		Predicate: func(obj interface{}) bool {
+			user := obj.(*entity.User)
+			return user.Username == username
+		},
+	})
+	if err != nil {
+		return nil, consts.ErrUsernamePassword
+	}
+
+	if userList.TotalSize > 0 {
+		foundUser = userList.Rows[0].(*entity.User)
+	}
+
+	if foundUser == nil || !foundUser.CheckPassword(password) {
+		return nil, consts.ErrUsernamePassword
+	}
+
+	// Check if user is active
+	if foundUser.Status != 1 {
 		return nil, consts.ErrUsernamePassword
 	}
 
@@ -99,7 +142,10 @@ func (h *Handler) userLogin(c droplet.Context) (interface{}, error) {
 		ExpiresAt: time.Now().Add(time.Second * time.Duration(conf.AuthConf.ExpireTime)).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, _ := token.SignedString([]byte(conf.AuthConf.Secret))
+	signedToken, err := token.SignedString([]byte(conf.AuthConf.Secret))
+	if err != nil {
+		return nil, err
+	}
 
 	// output token
 	return &UserSession{
