@@ -17,7 +17,7 @@
 import React from 'react';
 import { notification } from 'antd';
 import type { MenuDataItem } from '@ant-design/pro-layout';
-import { InfoCircleOutlined, FileTextOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, FileTextOutlined, UserOutlined, SafetyOutlined, AuditOutlined } from '@ant-design/icons';
 import { history } from 'umi';
 import moment from 'moment';
 import YAML from 'yaml';
@@ -73,6 +73,21 @@ export const getMenuData = (): MenuDataItem[] => {
       path: '/serverinfo',
       icon: <InfoCircleOutlined style={{ marginRight: 6 }} />,
     },
+    {
+      name: 'user-management',
+      path: '/user-management',
+      icon: <UserOutlined />,
+    },
+    {
+      name: 'permission-management',
+      path: '/permission-management',
+      icon: <SafetyOutlined />,
+    },
+    {
+      name: 'audit-log',
+      path: '/audit-log',
+      icon: <AuditOutlined />,
+    },
   ];
 };
 
@@ -102,9 +117,9 @@ export const errorHandler = (error: { response: Response; data: any }): Promise<
     if ([401].includes(response.status) && isLoginPage()) return Promise.reject(response);
 
     // TODO: improve code message mapper
-    const errorText = error.data?.message || codeMessage[response.status];
+    const errorText = error.data?.message || (codeMessage as any)[response.status] || response.statusText;
     notification.error({
-      message: `Request Error Code: ${error.data.code}`,
+      message: `Request Error Code: ${error.data?.code || response.status}`,
       description: errorText,
     });
   } else if (!response) {
@@ -185,12 +200,12 @@ export const transformLableValueToKeyValue = (data: string[]) => {
   });
 };
 
-export const transformLabelList = (data: ResponseLabelList) => {
+export const transformLabelList = (data: any[]) => {
   if (!data) {
     return {};
   }
-  const transformData = {};
-  data.forEach((item) => {
+  const transformData: any = {};
+  data.forEach((item: any) => {
     const key = Object.keys(item)[0];
     const value = item[key];
     if (!transformData[key]) {
@@ -199,7 +214,7 @@ export const transformLabelList = (data: ResponseLabelList) => {
       return;
     }
 
-    if (transformData[key] && !transformData[key][value]) {
+    if (transformData[key] && !transformData[key].includes(value)) {
       transformData[key].push(value);
     }
   });

@@ -73,6 +73,9 @@ export default {
   'menu.proto': 'Protocol Buffers',
   'menu.setting': 'Settings',
   'menu.serverinfo': 'System Info',
+  'menu.user-management': 'User Management',
+  'menu.permission-management': 'Permission Management',
+  'menu.audit-log': 'Audit Log',
   'menu.advanced-feature': 'Advanced',
   'menu.more': 'More',
 };

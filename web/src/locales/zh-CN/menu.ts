@@ -70,6 +70,9 @@ export default {
   'menu.proto': 'Protocol Buffers',
   'menu.setting': '系统设置',
   'menu.serverinfo': '系统信息',
+  'menu.user-management': '用户管理',
+  'menu.permission-management': '权限管理',
+  'menu.audit-log': '审计日志',
   'menu.advanced-feature': '高级特性',
   'menu.more': '更多',
 };
