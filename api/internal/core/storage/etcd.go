@@ -55,12 +55,19 @@ type EtcdV3Storage struct {
 }
 
 func InitETCDClient(etcdConf *conf.Etcd) error {
+	// Debug: Print detailed etcd configuration
+	fmt.Printf("[DEBUG] InitETCDClient called with endpoints: %v\n", etcdConf.Endpoints)
+	fmt.Printf("[DEBUG] InitETCDClient username: %s\n", etcdConf.Username)
+	
 	config := clientv3.Config{
 		Endpoints:   etcdConf.Endpoints,
 		DialTimeout: 5 * time.Second,
 		Username:    etcdConf.Username,
 		Password:    etcdConf.Password,
 	}
+	
+	// Debug: Print the final config before creating client
+	fmt.Printf("[DEBUG] Final etcd client config - Endpoints: %v, DialTimeout: %v\n", config.Endpoints, config.DialTimeout)
 	// mTLS
 	if etcdConf.MTLS != nil && etcdConf.MTLS.CaFile != "" &&
 		etcdConf.MTLS.CertFile != "" && etcdConf.MTLS.KeyFile != "" {
