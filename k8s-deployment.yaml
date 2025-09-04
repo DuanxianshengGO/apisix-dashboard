@@ -120,6 +120,8 @@ spec:
           name: http
         - containerPort: 9000
           name: api
+        - containerPort: 8080
+          name: management
         # env variables removed - etcd config is handled via ConfigMap
         volumeMounts:
         - name: config-volume
@@ -171,6 +173,10 @@ spec:
     targetPort: 9000
     protocol: TCP
     name: api
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: management
   selector:
     app: apisix-dashboard
 
