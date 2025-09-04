@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Form, Input, Button, Card, message, Typography } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import { useAuth } from '../contexts/AuthContext'
 
 const { Title } = Typography
 
@@ -14,20 +14,14 @@ interface LoginForm {
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const onFinish = async (values: LoginForm) => {
     setLoading(true)
     try {
-      const response = await axios.post('/api/apisix/admin/user/login', {
-        username: values.username,
-        password: values.password
-      })
+      const success = await login(values.username, values.password)
       
-      if (response.data && response.data.data && response.data.data.token) {
-        // 存储token到localStorage
-        localStorage.setItem('admin_token', response.data.data.token)
-        localStorage.setItem('admin_username', values.username)
-        
+      if (success) {
         message.success('登录成功')
         navigate('/dashboard')
       } else {
