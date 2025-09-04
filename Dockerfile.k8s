@@ -214,7 +214,7 @@ stdout_logfile=/var/log/nginx.log
 stderr_logfile=/var/log/nginx.log
 
 [program:apisix-dashboard]
-command=/usr/local/apisix-dashboard/manager-api -c /usr/local/apisix-dashboard/conf/conf.yaml
+command=/bin/sh -c 'if [ -f "/etc/apisix-dashboard/conf.yaml" ]; then exec /usr/local/apisix-dashboard/manager-api -c "/etc/apisix-dashboard/conf.yaml"; else exec /usr/local/apisix-dashboard/manager-api -c "/usr/local/apisix-dashboard/conf/conf.yaml"; fi'
 directory=/usr/local/apisix-dashboard
 autorestart=true
 stdout_logfile=/usr/local/apisix-dashboard/logs/manager-api.log
