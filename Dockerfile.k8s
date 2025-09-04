@@ -121,7 +121,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o manager-api ./main.go
 FROM nginx:alpine as runtime
 
 # Install supervisor to manage multiple processes
-RUN apk add --no-cache supervisor
+RUN apk add --no-cache supervisor && \
+    mkdir -p /etc/supervisor/conf.d
 
 # Create application directory
 WORKDIR /usr/local/apisix-dashboard
