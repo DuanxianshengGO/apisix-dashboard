@@ -74,11 +74,11 @@ type MTLS struct {
 }
 
 type Etcd struct {
-	Endpoints []string
-	Username  string
-	Password  string
-	MTLS      *MTLS
-	Prefix    string
+	Endpoints []string `mapstructure:"endpoints"`
+	Username  string   `mapstructure:"username"`
+	Password  string   `mapstructure:"password"`
+	MTLS      *MTLS    `mapstructure:"mtls"`
+	Prefix    string   `mapstructure:"prefix"`
 }
 
 type SSL struct {
@@ -89,12 +89,12 @@ type SSL struct {
 }
 
 type Listen struct {
-	Host string
-	Port int
+	Host string `mapstructure:"host"`
+	Port int    `mapstructure:"port"`
 }
 
 type ErrorLog struct {
-	Level    string
+	Level    string `mapstructure:"level"`
 	FilePath string `mapstructure:"file_path"`
 }
 
@@ -108,30 +108,30 @@ type Log struct {
 }
 
 type Conf struct {
-	Etcd      Etcd
-	Listen    Listen
-	SSL       SSL
-	Log       Log
+	Etcd      Etcd     `mapstructure:"etcd"`
+	Listen    Listen   `mapstructure:"listen"`
+	SSL       SSL      `mapstructure:"ssl"`
+	Log       Log      `mapstructure:"log"`
 	AllowList []string `mapstructure:"allow_list"`
 	MaxCpu    int      `mapstructure:"max_cpu"`
-	Security  Security
+	Security  Security `mapstructure:"security"`
 }
 
 type User struct {
-	Username string
-	Password string
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
 }
 
 type Authentication struct {
-	Secret     string
-	ExpireTime int `mapstructure:"expire_time"`
-	Users      []User
+	Secret     string `mapstructure:"secret"`
+	ExpireTime int    `mapstructure:"expire_time"`
+	Users      []User `mapstructure:"users"`
 }
 
 type Config struct {
-	Conf           Conf
-	Authentication Authentication
-	Plugins        []string
+	Conf           Conf           `mapstructure:"conf"`
+	Authentication Authentication `mapstructure:"authentication"`
+	Plugins        []string       `mapstructure:"plugins"`
 }
 
 type Security struct {
