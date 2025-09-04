@@ -14,7 +14,7 @@ data:
           - "http://etcd-service.apisix.svc.cluster.local:2379"
       log:
         error_log:
-          level: warn
+          level: debug
           file_path: logs/error.log
         access_log:
           file_path: logs/access.log
@@ -54,9 +54,7 @@ spec:
           name: http
         - containerPort: 9000
           name: api
-        env:
-        - name: ETCD_ENDPOINTS
-          value: "http://etcd:2379"
+        # env variables removed - etcd config is handled via ConfigMap
         volumeMounts:
         - name: config-volume
           mountPath: /usr/local/apisix-dashboard/conf
