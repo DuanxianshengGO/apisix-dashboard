@@ -16,7 +16,8 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
-import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
+import type { ActionType, ProColumns } from '@ant-design/pro-table';
+import ProTable from '@ant-design/pro-table';
 import { Button, Space, Tag, Modal, Form, Input, Select, Switch, message, Popconfirm } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { request } from 'umi';
@@ -74,7 +75,7 @@ const UserManagement: React.FC = () => {
           username: params.username,
         },
       });
-      
+
       if (response.code === 0) {
         return {
           data: response.data?.list || [],
@@ -110,7 +111,7 @@ const UserManagement: React.FC = () => {
           roles: values.roles || [],
         },
       });
-      
+
       if (response.code === 0) {
         message.success('用户创建成功');
         setCreateModalVisible(false);
@@ -127,7 +128,7 @@ const UserManagement: React.FC = () => {
   // 更新用户
   const handleUpdate = async (values: any) => {
     if (!currentUser) return;
-    
+
     try {
       const response = await request(`/apisix/admin/users/${currentUser.id}`, {
         method: 'PUT',
@@ -139,7 +140,7 @@ const UserManagement: React.FC = () => {
           ...(values.password && { password: values.password }),
         },
       });
-      
+
       if (response.code === 0) {
         message.success('用户更新成功');
         setEditModalVisible(false);
@@ -160,7 +161,7 @@ const UserManagement: React.FC = () => {
       const response = await request(`/apisix/admin/users/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (response.code === 0) {
         message.success('用户删除成功');
         actionRef.current?.reload();
@@ -220,7 +221,7 @@ const UserManagement: React.FC = () => {
         <Space>
           {record.roles?.map((role) => (
             <Tag key={role} color="blue">
-              {roles.find(r => r.id === role)?.name || role}
+              {roles.find((r) => r.id === role)?.name || role}
             </Tag>
           ))}
         </Space>
@@ -255,12 +256,7 @@ const UserManagement: React.FC = () => {
             okText="确定"
             cancelText="取消"
           >
-            <Button
-              type="link"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-            >
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
               删除
             </Button>
           </Popconfirm>
@@ -307,11 +303,7 @@ const UserManagement: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleCreate}
-        >
+        <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Form.Item
             name="username"
             label="用户名"
@@ -322,7 +314,7 @@ const UserManagement: React.FC = () => {
           >
             <Input placeholder="请输入用户名" />
           </Form.Item>
-          
+
           <Form.Item
             name="password"
             label="密码"
@@ -333,49 +325,41 @@ const UserManagement: React.FC = () => {
           >
             <Input.Password placeholder="请输入密码" />
           </Form.Item>
-          
+
           <Form.Item
             name="email"
             label="邮箱"
-            rules={[
-              { type: 'email', message: '请输入有效的邮箱地址' },
-            ]}
+            rules={[{ type: 'email', message: '请输入有效的邮箱地址' }]}
           >
             <Input placeholder="请输入邮箱" />
           </Form.Item>
-          
-          <Form.Item
-            name="roles"
-            label="角色"
-          >
+
+          <Form.Item name="roles" label="角色">
             <Select
               mode="multiple"
               placeholder="请选择角色"
-              options={roles.map(role => ({
+              options={roles.map((role) => ({
                 label: role.name,
                 value: role.id,
               }))}
             />
           </Form.Item>
-          
-          <Form.Item
-            name="status"
-            label="状态"
-            valuePropName="checked"
-            initialValue={true}
-          >
+
+          <Form.Item name="status" label="状态" valuePropName="checked" initialValue={true}>
             <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
-          
+
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
                 创建
               </Button>
-              <Button onClick={() => {
-                setCreateModalVisible(false);
-                form.resetFields();
-              }}>
+              <Button
+                onClick={() => {
+                  setCreateModalVisible(false);
+                  form.resetFields();
+                }}
+              >
                 取消
               </Button>
             </Space>
@@ -395,11 +379,7 @@ const UserManagement: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleUpdate}
-        >
+        <Form form={form} layout="vertical" onFinish={handleUpdate}>
           <Form.Item
             name="username"
             label="用户名"
@@ -410,59 +390,50 @@ const UserManagement: React.FC = () => {
           >
             <Input placeholder="请输入用户名" />
           </Form.Item>
-          
+
           <Form.Item
             name="password"
             label="密码（留空则不修改）"
-            rules={[
-              { min: 6, message: '密码至少6个字符' },
-            ]}
+            rules={[{ min: 6, message: '密码至少6个字符' }]}
           >
             <Input.Password placeholder="请输入新密码" />
           </Form.Item>
-          
+
           <Form.Item
             name="email"
             label="邮箱"
-            rules={[
-              { type: 'email', message: '请输入有效的邮箱地址' },
-            ]}
+            rules={[{ type: 'email', message: '请输入有效的邮箱地址' }]}
           >
             <Input placeholder="请输入邮箱" />
           </Form.Item>
-          
-          <Form.Item
-            name="roles"
-            label="角色"
-          >
+
+          <Form.Item name="roles" label="角色">
             <Select
               mode="multiple"
               placeholder="请选择角色"
-              options={roles.map(role => ({
+              options={roles.map((role) => ({
                 label: role.name,
                 value: role.id,
               }))}
             />
           </Form.Item>
-          
-          <Form.Item
-            name="status"
-            label="状态"
-            valuePropName="checked"
-          >
+
+          <Form.Item name="status" label="状态" valuePropName="checked">
             <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
-          
+
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
                 更新
               </Button>
-              <Button onClick={() => {
-                setEditModalVisible(false);
-                setCurrentUser(null);
-                form.resetFields();
-              }}>
+              <Button
+                onClick={() => {
+                  setEditModalVisible(false);
+                  setCurrentUser(null);
+                  form.resetFields();
+                }}
+              >
                 取消
               </Button>
             </Space>

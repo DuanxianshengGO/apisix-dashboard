@@ -14,13 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
-import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
+import type { ActionType, ProColumns } from '@ant-design/pro-table';
+import ProTable from '@ant-design/pro-table';
 import { Button, Space, Tag, Modal, Form, Input, Select, message, Popconfirm, Tabs } from 'antd';
-const { TabPane } = Tabs;
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { request } from 'umi';
+
+const { TabPane } = Tabs;
 
 interface PermissionItem {
   id: string;
@@ -66,7 +68,7 @@ const PermissionManagement: React.FC = () => {
           name: params.name,
         },
       });
-      
+
       if (response.code === 0) {
         const permissionList = response.data?.list || [];
         setPermissions(permissionList);
@@ -102,7 +104,7 @@ const PermissionManagement: React.FC = () => {
           name: params.name,
         },
       });
-      
+
       if (response.code === 0) {
         return {
           data: response.data?.list || [],
@@ -137,7 +139,7 @@ const PermissionManagement: React.FC = () => {
           action: values.action,
         },
       });
-      
+
       if (response.code === 0) {
         message.success('权限创建成功');
         setCreatePermissionModalVisible(false);
@@ -154,7 +156,7 @@ const PermissionManagement: React.FC = () => {
   // 更新权限
   const handleUpdatePermission = async (values: any) => {
     if (!currentPermission) return;
-    
+
     try {
       const response = await request(`/apisix/admin/permissions/${currentPermission.id}`, {
         method: 'PUT',
@@ -165,7 +167,7 @@ const PermissionManagement: React.FC = () => {
           action: values.action,
         },
       });
-      
+
       if (response.code === 0) {
         message.success('权限更新成功');
         setEditPermissionModalVisible(false);
@@ -186,7 +188,7 @@ const PermissionManagement: React.FC = () => {
       const response = await request(`/apisix/admin/permissions/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (response.code === 0) {
         message.success('权限删除成功');
         permissionActionRef.current?.reload();
@@ -209,7 +211,7 @@ const PermissionManagement: React.FC = () => {
           permissions: values.permissions || [],
         },
       });
-      
+
       if (response.code === 0) {
         message.success('角色创建成功');
         setCreateRoleModalVisible(false);
@@ -226,7 +228,7 @@ const PermissionManagement: React.FC = () => {
   // 更新角色
   const handleUpdateRole = async (values: any) => {
     if (!currentRole) return;
-    
+
     try {
       const response = await request(`/apisix/admin/roles/${currentRole.id}`, {
         method: 'PUT',
@@ -236,7 +238,7 @@ const PermissionManagement: React.FC = () => {
           permissions: values.permissions || [],
         },
       });
-      
+
       if (response.code === 0) {
         message.success('角色更新成功');
         setEditRoleModalVisible(false);
@@ -257,7 +259,7 @@ const PermissionManagement: React.FC = () => {
       const response = await request(`/apisix/admin/roles/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (response.code === 0) {
         message.success('角色删除成功');
         roleActionRef.current?.reload();
@@ -312,9 +314,7 @@ const PermissionManagement: React.FC = () => {
       key: 'resource',
       width: 120,
       hideInSearch: true,
-      render: (_, record) => (
-        <Tag color="blue">{record.resource}</Tag>
-      ),
+      render: (_, record) => <Tag color="blue">{record.resource}</Tag>,
     },
     {
       title: '操作',
@@ -322,9 +322,7 @@ const PermissionManagement: React.FC = () => {
       key: 'action',
       width: 120,
       hideInSearch: true,
-      render: (_, record) => (
-        <Tag color="green">{record.action}</Tag>
-      ),
+      render: (_, record) => <Tag color="green">{record.action}</Tag>,
     },
     {
       title: '创建时间',
@@ -355,12 +353,7 @@ const PermissionManagement: React.FC = () => {
             okText="确定"
             cancelText="取消"
           >
-            <Button
-              type="link"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-            >
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
               删除
             </Button>
           </Popconfirm>
@@ -392,7 +385,7 @@ const PermissionManagement: React.FC = () => {
       render: (_, record) => (
         <Space wrap>
           {record.permissions?.map((permissionId) => {
-            const permission = permissions.find(p => p.id === permissionId);
+            const permission = permissions.find((p) => p.id === permissionId);
             return (
               <Tag key={permissionId} color="blue">
                 {permission?.name || permissionId}
@@ -431,12 +424,7 @@ const PermissionManagement: React.FC = () => {
             okText="确定"
             cancelText="取消"
           >
-            <Button
-              type="link"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-            >
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
               删除
             </Button>
           </Popconfirm>
@@ -466,10 +454,7 @@ const PermissionManagement: React.FC = () => {
 
   return (
     <PageContainer>
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-      >
+      <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <TabPane tab="权限管理" key="permissions">
           <ProTable<PermissionItem>
             headerTitle="权限管理"
@@ -535,11 +520,7 @@ const PermissionManagement: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Form
-          form={permissionForm}
-          layout="vertical"
-          onFinish={handleCreatePermission}
-        >
+        <Form form={permissionForm} layout="vertical" onFinish={handleCreatePermission}>
           <Form.Item
             name="name"
             label="权限名称"
@@ -550,43 +531,34 @@ const PermissionManagement: React.FC = () => {
           >
             <Input placeholder="请输入权限名称" />
           </Form.Item>
-          
-          <Form.Item
-            name="desc"
-            label="描述"
-          >
+
+          <Form.Item name="desc" label="描述">
             <Input.TextArea placeholder="请输入权限描述" rows={3} />
           </Form.Item>
-          
+
           <Form.Item
             name="resource"
             label="资源"
-            rules={[
-              { required: true, message: '请选择资源' },
-            ]}
+            rules={[{ required: true, message: '请选择资源' }]}
           >
             <Select placeholder="请选择资源" options={resourceOptions} />
           </Form.Item>
-          
-          <Form.Item
-            name="action"
-            label="操作"
-            rules={[
-              { required: true, message: '请选择操作' },
-            ]}
-          >
+
+          <Form.Item name="action" label="操作" rules={[{ required: true, message: '请选择操作' }]}>
             <Select placeholder="请选择操作" options={actionOptions} />
           </Form.Item>
-          
+
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
                 创建
               </Button>
-              <Button onClick={() => {
-                setCreatePermissionModalVisible(false);
-                permissionForm.resetFields();
-              }}>
+              <Button
+                onClick={() => {
+                  setCreatePermissionModalVisible(false);
+                  permissionForm.resetFields();
+                }}
+              >
                 取消
               </Button>
             </Space>
@@ -606,11 +578,7 @@ const PermissionManagement: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Form
-          form={permissionForm}
-          layout="vertical"
-          onFinish={handleUpdatePermission}
-        >
+        <Form form={permissionForm} layout="vertical" onFinish={handleUpdatePermission}>
           <Form.Item
             name="name"
             label="权限名称"
@@ -621,44 +589,35 @@ const PermissionManagement: React.FC = () => {
           >
             <Input placeholder="请输入权限名称" />
           </Form.Item>
-          
-          <Form.Item
-            name="desc"
-            label="描述"
-          >
+
+          <Form.Item name="desc" label="描述">
             <Input.TextArea placeholder="请输入权限描述" rows={3} />
           </Form.Item>
-          
+
           <Form.Item
             name="resource"
             label="资源"
-            rules={[
-              { required: true, message: '请选择资源' },
-            ]}
+            rules={[{ required: true, message: '请选择资源' }]}
           >
             <Select placeholder="请选择资源" options={resourceOptions} />
           </Form.Item>
-          
-          <Form.Item
-            name="action"
-            label="操作"
-            rules={[
-              { required: true, message: '请选择操作' },
-            ]}
-          >
+
+          <Form.Item name="action" label="操作" rules={[{ required: true, message: '请选择操作' }]}>
             <Select placeholder="请选择操作" options={actionOptions} />
           </Form.Item>
-          
+
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
                 更新
               </Button>
-              <Button onClick={() => {
-                setEditPermissionModalVisible(false);
-                setCurrentPermission(null);
-                permissionForm.resetFields();
-              }}>
+              <Button
+                onClick={() => {
+                  setEditPermissionModalVisible(false);
+                  setCurrentPermission(null);
+                  permissionForm.resetFields();
+                }}
+              >
                 取消
               </Button>
             </Space>
@@ -677,11 +636,7 @@ const PermissionManagement: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Form
-          form={roleForm}
-          layout="vertical"
-          onFinish={handleCreateRole}
-        >
+        <Form form={roleForm} layout="vertical" onFinish={handleCreateRole}>
           <Form.Item
             name="name"
             label="角色名称"
@@ -692,37 +647,33 @@ const PermissionManagement: React.FC = () => {
           >
             <Input placeholder="请输入角色名称" />
           </Form.Item>
-          
-          <Form.Item
-            name="desc"
-            label="描述"
-          >
+
+          <Form.Item name="desc" label="描述">
             <Input.TextArea placeholder="请输入角色描述" rows={3} />
           </Form.Item>
-          
-          <Form.Item
-            name="permissions"
-            label="权限"
-          >
+
+          <Form.Item name="permissions" label="权限">
             <Select
               mode="multiple"
               placeholder="请选择权限"
-              options={permissions.map(permission => ({
+              options={permissions.map((permission) => ({
                 label: `${permission.name} (${permission.resource}:${permission.action})`,
                 value: permission.id,
               }))}
             />
           </Form.Item>
-          
+
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
                 创建
               </Button>
-              <Button onClick={() => {
-                setCreateRoleModalVisible(false);
-                roleForm.resetFields();
-              }}>
+              <Button
+                onClick={() => {
+                  setCreateRoleModalVisible(false);
+                  roleForm.resetFields();
+                }}
+              >
                 取消
               </Button>
             </Space>
@@ -742,11 +693,7 @@ const PermissionManagement: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Form
-          form={roleForm}
-          layout="vertical"
-          onFinish={handleUpdateRole}
-        >
+        <Form form={roleForm} layout="vertical" onFinish={handleUpdateRole}>
           <Form.Item
             name="name"
             label="角色名称"
@@ -757,38 +704,34 @@ const PermissionManagement: React.FC = () => {
           >
             <Input placeholder="请输入角色名称" />
           </Form.Item>
-          
-          <Form.Item
-            name="desc"
-            label="描述"
-          >
+
+          <Form.Item name="desc" label="描述">
             <Input.TextArea placeholder="请输入角色描述" rows={3} />
           </Form.Item>
-          
-          <Form.Item
-            name="permissions"
-            label="权限"
-          >
+
+          <Form.Item name="permissions" label="权限">
             <Select
               mode="multiple"
               placeholder="请选择权限"
-              options={permissions.map(permission => ({
+              options={permissions.map((permission) => ({
                 label: `${permission.name} (${permission.resource}:${permission.action})`,
                 value: permission.id,
               }))}
             />
           </Form.Item>
-          
+
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
                 更新
               </Button>
-              <Button onClick={() => {
-                setEditRoleModalVisible(false);
-                setCurrentRole(null);
-                roleForm.resetFields();
-              }}>
+              <Button
+                onClick={() => {
+                  setEditRoleModalVisible(false);
+                  setCurrentRole(null);
+                  roleForm.resetFields();
+                }}
+              >
                 取消
               </Button>
             </Space>
