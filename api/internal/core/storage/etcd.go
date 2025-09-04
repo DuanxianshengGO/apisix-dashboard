@@ -59,15 +59,18 @@ func InitETCDClient(etcdConf *conf.Etcd) error {
 	fmt.Printf("[DEBUG] InitETCDClient called with endpoints: %v\n", etcdConf.Endpoints)
 	fmt.Printf("[DEBUG] InitETCDClient username: %s\n", etcdConf.Username)
 	
+	// Force disable etcd client's internal load balancer to prevent endpoint resolution issues
 	config := clientv3.Config{
 		Endpoints:   etcdConf.Endpoints,
 		DialTimeout: 5 * time.Second,
 		Username:    etcdConf.Username,
 		Password:    etcdConf.Password,
+		// Disable auto sync to prevent endpoint discovery issues
+		AutoSyncInterval: 0,
 	}
 	
 	// Debug: Print the final config before creating client
-	fmt.Printf("[DEBUG] Final etcd client config - Endpoints: %v, DialTimeout: %v\n", config.Endpoints, config.DialTimeout)
+	fmt.Printf("[DEBUG] Final etcd client config - Endpoints: %v, DialTimeout: %v, AutoSyncInterval: %v\n", config.Endpoints, config.DialTimeout, config.AutoSyncInterval)
 	// mTLS
 	if etcdConf.MTLS != nil && etcdConf.MTLS.CaFile != "" &&
 		etcdConf.MTLS.CertFile != "" && etcdConf.MTLS.KeyFile != "" {
@@ -87,6 +90,22 @@ func InitETCDClient(etcdConf *conf.Etcd) error {
 	if err != nil {
 		log.Errorf("init etcd failed: %s", err)
 		return fmt.Errorf("init etcd failed: %s", err)
+	}
+
+	// Test connection immediately after creation
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	fmt.Printf("[DEBUG] Testing etcd connection to endpoints: %v\n", config.Endpoints)
+	resp, err := cli.MemberList(ctx)
+	if err != nil {
+		fmt.Printf("[DEBUG] etcd connection test failed: %v\n", err)
+		// Don't fail initialization, just log the error
+	} else {
+		fmt.Printf("[DEBUG] etcd connection test successful, members: %d\n", len(resp.Members))
+		for i, member := range resp.Members {
+			fmt.Printf("[DEBUG] Member %d: ID=%d, ClientURLs=%v\n", i, member.ID, member.ClientURLs)
+		}
 	}
 
 	etcdClient = cli
