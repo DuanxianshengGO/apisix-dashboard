@@ -129,18 +129,7 @@ const routes = [
     component: './User/Logout',
     layout: false,
   },
-  {
-    path: '/user-management',
-    component: './UserManagement/List',
-  },
-  {
-    path: '/permission-management',
-    component: './PermissionManagement/List',
-  },
-  {
-    path: '/audit-log',
-    component: './AuditLog/List',
-  },
+
   {
     component: './404',
   },

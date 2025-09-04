@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # ETCD服务
+  etcd:
+    image: bitnami/etcd:3.5.0
+    container_name: apisix-etcd
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_ADVERTISE_CLIENT_URLS=http://0.0.0.0:2379
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    volumes:
+      - etcd_data:/bitnami/etcd
+    networks:
+      - apisix-network
+
+  # APISIX Dashboard with Admin Frontend
+  apisix-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    container_name: apisix-dashboard-admin
+    ports:
+      - "80:80"        # 主前端界面
+      - "8080:8080"    # 后台管理界面
+      - "9000:9000"    # API接口
+    environment:
+      - ETCD_ENDPOINTS=http://etcd:2379
+    volumes:
+      - ./api/conf/conf.yaml:/etc/apisix-dashboard/conf.yaml:ro
+      - dashboard_logs:/usr/local/apisix-dashboard/logs
+    depends_on:
+      - etcd
+    networks:
+      - apisix-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 开发环境的Admin Frontend (热重载)
+  admin-frontend-dev:
+    build:
+      context: ./admin-frontend
+      dockerfile: Dockerfile.dev
+    container_name: admin-frontend-dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./admin-frontend/src:/app/src:ro
+      - ./admin-frontend/public:/app/public:ro
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - FAST_REFRESH=true
+    networks:
+      - apisix-network
+    profiles:
+      - dev
+
+  # Nginx代理服务 (可选，用于生产环境)
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: apisix-nginx-proxy
+    ports:
+      - "8081:80"      # 代理后的主界面
+      - "8082:8080"    # 代理后的管理界面
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - apisix-dashboard
+    networks:
+      - apisix-network
+    profiles:
+      - proxy
+
+volumes:
+  etcd_data:
+    driver: local
+  dashboard_logs:
+    driver: local
+
+networks:
+  apisix-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

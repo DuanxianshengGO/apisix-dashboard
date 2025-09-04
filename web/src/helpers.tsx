@@ -17,7 +17,7 @@
 import React from 'react';
 import { notification } from 'antd';
 import type { MenuDataItem } from '@ant-design/pro-layout';
-import { InfoCircleOutlined, FileTextOutlined, UserOutlined, SafetyOutlined, AuditOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, FileTextOutlined } from '@ant-design/icons';
 import { history } from 'umi';
 import moment from 'moment';
 import YAML from 'yaml';
@@ -73,21 +73,6 @@ export const getMenuData = (): MenuDataItem[] => {
       path: '/serverinfo',
       icon: <InfoCircleOutlined style={{ marginRight: 6 }} />,
     },
-    {
-      name: 'user-management',
-      path: '/user-management',
-      icon: <UserOutlined />,
-    },
-    {
-      name: 'permission-management',
-      path: '/permission-management',
-      icon: <SafetyOutlined />,
-    },
-    {
-      name: 'audit-log',
-      path: '/audit-log',
-      icon: <AuditOutlined />,
-    },
   ];
 };
 
@@ -117,7 +102,8 @@ export const errorHandler = (error: { response: Response; data: any }): Promise<
     if ([401].includes(response.status) && isLoginPage()) return Promise.reject(response);
 
     // TODO: improve code message mapper
-    const errorText = error.data?.message || (codeMessage as any)[response.status] || response.statusText;
+    const errorText =
+      error.data?.message || (codeMessage as any)[response.status] || response.statusText;
     notification.error({
       message: `Request Error Code: ${error.data?.code || response.status}`,
       description: errorText,
