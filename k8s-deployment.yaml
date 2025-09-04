@@ -11,7 +11,7 @@ data:
         port: 9000
       etcd:
         endpoints:
-          - "http://etcd-service.apisix.svc.cluster.local:2379"
+          - "etcd-service.apisix.svc.cluster.local:2379"
       log:
         error_log:
           level: debug
