@@ -45,8 +45,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password
       })
       
-      if (response.data && response.data.token) {
-        const token = response.data.token
+      if (response.data && response.data.data && response.data.data.token) {
+        const token = response.data.data.token
         
         // 存储到localStorage
         localStorage.setItem('admin_token', token)

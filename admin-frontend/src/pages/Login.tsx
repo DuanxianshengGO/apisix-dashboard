@@ -23,9 +23,9 @@ const Login: React.FC = () => {
         password: values.password
       })
       
-      if (response.data && response.data.token) {
+      if (response.data && response.data.data && response.data.data.token) {
         // 存储token到localStorage
-        localStorage.setItem('admin_token', response.data.token)
+        localStorage.setItem('admin_token', response.data.data.token)
         localStorage.setItem('admin_username', values.username)
         
         message.success('登录成功')
