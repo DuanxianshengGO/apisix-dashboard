@@ -181,12 +181,16 @@ func setupConfig() {
 		panic(fmt.Sprintf("fail to read configuration, err: %s", err.Error()))
 	}
 
+	fmt.Printf("[DEBUG] Successfully loaded config file: %s\n", viper.ConfigFileUsed())
+
 	// unmarshal config
 	config := Config{}
 	err := viper.Unmarshal(&config)
 	if err != nil {
 		panic(fmt.Sprintf("fail to unmarshal configuration: %s, err: %s", ConfigFile, err.Error()))
 	}
+
+	fmt.Printf("[DEBUG] Parsed etcd endpoints: %v\n", config.Conf.Etcd.Endpoints)
 
 	// listen
 	if config.Conf.Listen.Port != 0 {
@@ -208,9 +212,9 @@ func setupConfig() {
 	}
 
 	// ETCD Storage
-	if len(config.Conf.Etcd.Endpoints) > 0 {
-		initEtcdConfig(config.Conf.Etcd)
-	}
+	// Always initialize ETCD config, even if endpoints are empty
+	// This ensures ETCDConfig is never nil
+	initEtcdConfig(config.Conf.Etcd)
 
 	// error log
 	if config.Conf.Log.ErrorLog.Level != "" {
@@ -361,6 +365,8 @@ func initEtcdConfig(conf Etcd) {
 		MTLS:      conf.MTLS,
 		Prefix:    prefix,
 	}
+
+	fmt.Printf("[DEBUG] Final ETCD config - Endpoints: %v, Username: %s\n", ETCDConfig.Endpoints, ETCDConfig.Username)
 }
 
 // initialize parallelism settings
