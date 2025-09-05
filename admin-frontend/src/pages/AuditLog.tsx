@@ -14,6 +14,7 @@ import {
 import { SearchOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
+import auditService from '../services/auditService'
 
 const { RangePicker } = DatePicker
 const { Search } = Input
@@ -133,16 +134,17 @@ const AuditLog: React.FC = () => {
   const fetchLogs = async () => {
     setLoading(true)
     try {
-      // 这里应该调用实际的API
-      // const response = await fetch('/api/audit-logs')
-      // const data = await response.json()
-      // setLogs(data)
+      // 从auditService获取真实的审计日志数据
+      const realLogs = auditService.getLogs()
       
-      // 模拟API调用
+      // 如果没有真实数据，使用模拟数据作为示例
+      const logsToUse = realLogs.length > 0 ? realLogs : mockLogs
+      
+      // 模拟API调用延迟
       setTimeout(() => {
-        setLogs(mockLogs)
+        setLogs(logsToUse)
         setLoading(false)
-      }, 1000)
+      }, 500)
     } catch (error) {
       console.error('获取审计日志失败:', error)
       setLoading(false)

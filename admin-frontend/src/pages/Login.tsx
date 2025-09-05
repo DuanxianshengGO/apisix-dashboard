@@ -3,6 +3,8 @@ import { Form, Input, Button, Card, message, Typography } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { usePermission } from '../contexts/PermissionContext'
+import auditService from '../services/auditService'
 
 const { Title } = Typography
 
@@ -15,25 +17,36 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const { login } = useAuth()
+  const { login: permissionLogin } = usePermission()
 
   const onFinish = async (values: LoginForm) => {
     setLoading(true)
     try {
-      const success = await login(values.username, values.password)
+      // 首先尝试权限系统登录
+      const permissionSuccess = await permissionLogin(values.username, values.password)
       
-      if (success) {
+      if (permissionSuccess) {
+        // 权限系统登录成功，也调用原有的认证系统
+        const authSuccess = await login(values.username, values.password)
+        
+        // 记录登录成功的审计日志
+        auditService.logLogin(values.username, '1', true)
+        
         message.success('登录成功')
         navigate('/dashboard')
       } else {
-        message.error('登录失败：无效的响应')
+        // 记录登录失败的审计日志
+        auditService.logLogin(values.username, 'unknown', false, '用户名或密码错误')
+        
+        message.error('用户名或密码错误')
       }
     } catch (error: any) {
       console.error('Login error:', error)
-      if (error.response?.status === 401) {
-        message.error('用户名或密码错误')
-      } else {
-        message.error('登录失败：' + (error.response?.data?.message || error.message))
-      }
+      
+      // 记录登录异常的审计日志
+      auditService.logLogin(values.username, 'unknown', false, error.message || '登录异常')
+      
+      message.error('登录失败：' + (error.message || '未知错误'))
     } finally {
       setLoading(false)
     }
@@ -108,7 +121,8 @@ const Login: React.FC = () => {
         </Form>
         
         <div style={{ textAlign: 'center', marginTop: 16, color: '#999', fontSize: '12px' }}>
-          <p>默认账户: admin / admin</p>
+          <p>默认账户: admin / admin123</p>
+          <p>开发账户: dev / dev123 (只读权限)</p>
         </div>
       </Card>
     </div>

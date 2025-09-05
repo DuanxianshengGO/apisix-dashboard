@@ -14,6 +14,9 @@ import {
 } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
+import PermissionGuard from '../components/PermissionGuard'
+import auditService from '../services/auditService'
+import { usePermission } from '../contexts/PermissionContext'
 
 interface Permission {
   id: string
@@ -37,6 +40,7 @@ interface User {
   id: string
   username: string
   email: string
+  password: string
   role: string
   status: 'active' | 'inactive'
   createTime: string
@@ -44,6 +48,7 @@ interface User {
 }
 
 const PermissionManagement: React.FC = () => {
+  const { currentUser } = usePermission()
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [users, setUsers] = useState<User[]>([])
@@ -60,8 +65,190 @@ const PermissionManagement: React.FC = () => {
   const [userForm] = Form.useForm()
 
   useEffect(() => {
-    fetchData()
+    loadDataFromStorage()
   }, [])
+
+  // 从localStorage加载数据
+  const loadDataFromStorage = () => {
+    try {
+      const savedPermissions = localStorage.getItem('permissions')
+      const savedRoles = localStorage.getItem('roles')
+      const savedUsers = localStorage.getItem('users')
+
+      if (savedPermissions) {
+        setPermissions(JSON.parse(savedPermissions))
+      } else {
+        // 初始化默认数据
+        const defaultPermissions = [
+          {
+            id: '1',
+            name: '查看权限',
+            resource: 'permissions',
+            action: 'read',
+            description: '查看权限配置',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '2',
+            name: '创建权限',
+            resource: 'permissions',
+            action: 'create',
+            description: '创建新权限',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '3',
+            name: '编辑权限',
+            resource: 'permissions',
+            action: 'edit',
+            description: '编辑权限配置',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '4',
+            name: '删除权限',
+            resource: 'permissions',
+            action: 'delete',
+            description: '删除权限',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '5',
+            name: '查看角色',
+            resource: 'roles',
+            action: 'read',
+            description: '查看角色配置',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '6',
+            name: '创建角色',
+            resource: 'roles',
+            action: 'create',
+            description: '创建新角色',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '7',
+            name: '编辑角色',
+            resource: 'roles',
+            action: 'edit',
+            description: '编辑角色配置',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '8',
+            name: '删除角色',
+            resource: 'roles',
+            action: 'delete',
+            description: '删除角色',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '9',
+            name: '查看用户',
+            resource: 'users',
+            action: 'read',
+            description: '查看用户信息',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '10',
+            name: '创建用户',
+            resource: 'users',
+            action: 'create',
+            description: '创建新用户',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '11',
+            name: '编辑用户',
+            resource: 'users',
+            action: 'edit',
+            description: '编辑用户信息',
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '12',
+            name: '删除用户',
+            resource: 'users',
+            action: 'delete',
+            description: '删除用户',
+            createTime: '2024-01-01 10:00:00'
+          }
+        ]
+        setPermissions(defaultPermissions)
+        localStorage.setItem('permissions', JSON.stringify(defaultPermissions))
+      }
+
+      if (savedRoles) {
+        setRoles(JSON.parse(savedRoles))
+      } else {
+        const defaultRoles = [
+          {
+            id: '1',
+            name: '管理员',
+            description: '系统管理员，拥有所有权限',
+            permissions: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+            status: 'active' as const,
+            createTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '2',
+            name: '开发者',
+            description: '开发人员，只有查看权限',
+            permissions: ['1', '5', '9'],
+            status: 'active' as const,
+            createTime: '2024-01-01 10:00:00'
+          }
+        ]
+        setRoles(defaultRoles)
+        localStorage.setItem('roles', JSON.stringify(defaultRoles))
+      }
+
+      if (savedUsers) {
+        setUsers(JSON.parse(savedUsers))
+      } else {
+        const defaultUsers = [
+          {
+            id: '1',
+            username: 'admin',
+            email: 'admin@example.com',
+            password: 'admin123',
+            role: '1',
+            status: 'active' as const,
+            createTime: '2024-01-01 10:00:00',
+            updateTime: '2024-01-01 10:00:00'
+          },
+          {
+            id: '2',
+            username: 'dev',
+            email: 'dev@example.com',
+            password: 'dev123',
+            role: '2',
+            status: 'active' as const,
+            createTime: '2024-01-01 10:00:00',
+            updateTime: '2024-01-01 10:00:00'
+          }
+        ]
+        setUsers(defaultUsers)
+        localStorage.setItem('users', JSON.stringify(defaultUsers))
+      }
+    } catch (error) {
+      console.error('加载数据失败:', error)
+      message.error('加载数据失败')
+    }
+  }
+
+  // 保存数据到localStorage
+  const saveDataToStorage = (type: 'permissions' | 'roles' | 'users', data: any[]) => {
+    try {
+      localStorage.setItem(type, JSON.stringify(data))
+    } catch (error) {
+      console.error('保存数据失败:', error)
+      message.error('保存数据失败')
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
@@ -102,6 +289,7 @@ const PermissionManagement: React.FC = () => {
           id: '1',
           username: 'admin',
           email: 'admin@example.com',
+          password: 'admin123',
           role: '1',
           status: 'active',
           createTime: '2024-01-01 10:00:00',
@@ -129,32 +317,99 @@ const PermissionManagement: React.FC = () => {
 
   const handleDeletePermission = async (id: string) => {
     try {
-      setPermissions(permissions.filter(p => p.id !== id))
+      const permission = permissions.find(p => p.id === id)
+      const updatedPermissions = permissions.filter(p => p.id !== id)
+      setPermissions(updatedPermissions)
+      saveDataToStorage('permissions', updatedPermissions)
+      
+      // 记录审计日志
+      if (currentUser && permission) {
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          'delete',
+          'permissions',
+          id,
+          { name: permission.name, resource: permission.resource, action: permission.action }
+        )
+      }
+      
       message.success('删除成功')
     } catch (error) {
       message.error('删除失败')
+      
+      // 记录失败日志
+      if (currentUser) {
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          'delete',
+          'permissions',
+          id,
+          {},
+          false,
+          '删除权限失败'
+        )
+      }
     }
   }
 
   const handleSubmitPermission = async (values: any) => {
     try {
+      let updatedPermissions
+      const action = editingPermission ? 'update' : 'create'
+      const resourceId = editingPermission ? editingPermission.id : Date.now().toString()
+      
       if (editingPermission) {
         const updatedPermission = { ...editingPermission, ...values }
-        setPermissions(permissions.map(p => p.id === editingPermission.id ? updatedPermission : p))
+        updatedPermissions = permissions.map(p => p.id === editingPermission.id ? updatedPermission : p)
+        setPermissions(updatedPermissions)
         message.success('更新成功')
       } else {
         const newPermission: Permission = {
-          id: Date.now().toString(),
+          id: resourceId,
           ...values,
           createTime: new Date().toLocaleString(),
         }
-        setPermissions([...permissions, newPermission])
+        updatedPermissions = [...permissions, newPermission]
+        setPermissions(updatedPermissions)
         message.success('添加成功')
       }
+      
+      saveDataToStorage('permissions', updatedPermissions)
+      
+      // 记录审计日志
+      if (currentUser) {
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          action,
+          'permissions',
+          resourceId,
+          { name: values.name, resource: values.resource, action: values.action }
+        )
+      }
+      
       setPermissionModalVisible(false)
       permissionForm.resetFields()
     } catch (error) {
       message.error('操作失败')
+      
+      // 记录失败日志
+      if (currentUser) {
+        const action = editingPermission ? 'update' : 'create'
+        const resourceId = editingPermission ? editingPermission.id : 'unknown'
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          action,
+          'permissions',
+          resourceId,
+          values,
+          false,
+          '权限操作失败'
+        )
+      }
     }
   }
 
@@ -172,32 +427,99 @@ const PermissionManagement: React.FC = () => {
 
   const handleDeleteRole = async (id: string) => {
     try {
-      setRoles(roles.filter(r => r.id !== id))
+      const role = roles.find(r => r.id === id)
+      const updatedRoles = roles.filter(r => r.id !== id)
+      setRoles(updatedRoles)
+      saveDataToStorage('roles', updatedRoles)
+      
+      // 记录审计日志
+      if (currentUser && role) {
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          'delete',
+          'roles',
+          id,
+          { name: role.name, permissions: role.permissions }
+        )
+      }
+      
       message.success('删除成功')
     } catch (error) {
       message.error('删除失败')
+      
+      // 记录失败日志
+      if (currentUser) {
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          'delete',
+          'roles',
+          id,
+          {},
+          false,
+          '删除角色失败'
+        )
+      }
     }
   }
 
   const handleSubmitRole = async (values: any) => {
     try {
+      let updatedRoles
+      const action = editingRole ? 'update' : 'create'
+      const resourceId = editingRole ? editingRole.id : Date.now().toString()
+      
       if (editingRole) {
         const updatedRole = { ...editingRole, ...values }
-        setRoles(roles.map(r => r.id === editingRole.id ? updatedRole : r))
+        updatedRoles = roles.map(r => r.id === editingRole.id ? updatedRole : r)
+        setRoles(updatedRoles)
         message.success('更新成功')
       } else {
         const newRole: Role = {
-          id: Date.now().toString(),
+          id: resourceId,
           ...values,
           createTime: new Date().toLocaleString(),
         }
-        setRoles([...roles, newRole])
+        updatedRoles = [...roles, newRole]
+        setRoles(updatedRoles)
         message.success('添加成功')
       }
+      
+      saveDataToStorage('roles', updatedRoles)
+      
+      // 记录审计日志
+      if (currentUser) {
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          action,
+          'roles',
+          resourceId,
+          { name: values.name, permissions: values.permissions }
+        )
+      }
+      
       setRoleModalVisible(false)
       roleForm.resetFields()
     } catch (error) {
       message.error('操作失败')
+      
+      // 记录失败日志
+      if (currentUser) {
+        const action = editingRole ? 'update' : 'create'
+        const resourceId = editingRole ? editingRole.id : 'unknown'
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          action,
+          'roles',
+          resourceId,
+          values,
+          false,
+          '角色操作失败'
+        )
+      }
     }
   }
 
@@ -215,37 +537,115 @@ const PermissionManagement: React.FC = () => {
 
   const handleDeleteUser = async (id: string) => {
     try {
-      setUsers(users.filter(u => u.id !== id))
+      const user = users.find(u => u.id === id)
+      const updatedUsers = users.filter(u => u.id !== id)
+      setUsers(updatedUsers)
+      saveDataToStorage('users', updatedUsers)
+      
+      // 记录审计日志
+      if (currentUser && user) {
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          'delete',
+          'users',
+          id,
+          { username: user.username, email: user.email, role: user.role }
+        )
+      }
+      
       message.success('删除成功')
     } catch (error) {
       message.error('删除失败')
+      
+      // 记录失败日志
+      if (currentUser) {
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          'delete',
+          'users',
+          id,
+          {},
+          false,
+          '删除用户失败'
+        )
+      }
     }
   }
 
   const handleSubmitUser = async (values: any) => {
     try {
+      let updatedUsers
+      const action = editingUser ? 'update' : 'create'
+      const resourceId = editingUser ? editingUser.id : Date.now().toString()
+      
       if (editingUser) {
         const updatedUser = { 
           ...editingUser, 
           ...values, 
           updateTime: new Date().toLocaleString() 
         }
-        setUsers(users.map(u => u.id === editingUser.id ? updatedUser : u))
+        // 如果密码为空，则不更新密码字段
+        if (!values.password) {
+          delete updatedUser.password
+          updatedUser.password = editingUser.password
+        }
+        updatedUsers = users.map(u => u.id === editingUser.id ? updatedUser : u)
+        setUsers(updatedUsers)
         message.success('更新成功')
       } else {
         const newUser: User = {
-          id: Date.now().toString(),
+          id: resourceId,
           ...values,
           createTime: new Date().toLocaleString(),
           updateTime: new Date().toLocaleString(),
         }
-        setUsers([...users, newUser])
+        updatedUsers = [...users, newUser]
+        setUsers(updatedUsers)
         message.success('添加成功')
       }
+      
+      saveDataToStorage('users', updatedUsers)
+      
+      // 记录审计日志
+      if (currentUser) {
+        const logDetails = {
+          username: values.username,
+          email: values.email,
+          role: values.role,
+          status: values.status
+        }
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          action,
+          'users',
+          resourceId,
+          logDetails
+        )
+      }
+      
       setUserModalVisible(false)
       userForm.resetFields()
     } catch (error) {
       message.error('操作失败')
+      
+      // 记录失败日志
+      if (currentUser) {
+        const action = editingUser ? 'update' : 'create'
+        const resourceId = editingUser ? editingUser.id : 'unknown'
+        auditService.logPermissionOperation(
+          currentUser.username,
+          currentUser.id,
+          action,
+          'users',
+          resourceId,
+          values,
+          false,
+          '用户操作失败'
+        )
+      }
     }
   }
 
@@ -280,23 +680,27 @@ const PermissionManagement: React.FC = () => {
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEditPermission(record)}
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这个权限吗？"
-            onConfirm={() => handleDeletePermission(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              删除
+          <PermissionGuard resource="permissions" action="edit">
+            <Button
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => handleEditPermission(record)}
+            >
+              编辑
             </Button>
-          </Popconfirm>
+          </PermissionGuard>
+          <PermissionGuard resource="permissions" action="delete">
+            <Popconfirm
+              title="确定要删除这个权限吗？"
+              onConfirm={() => handleDeletePermission(record.id)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button type="link" danger icon={<DeleteOutlined />}>
+                删除
+              </Button>
+            </Popconfirm>
+          </PermissionGuard>
         </Space>
       ),
     },
@@ -339,23 +743,27 @@ const PermissionManagement: React.FC = () => {
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEditRole(record)}
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这个角色吗？"
-            onConfirm={() => handleDeleteRole(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              删除
+          <PermissionGuard resource="roles" action="edit">
+            <Button
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => handleEditRole(record)}
+            >
+              编辑
             </Button>
-          </Popconfirm>
+          </PermissionGuard>
+          <PermissionGuard resource="roles" action="delete">
+            <Popconfirm
+              title="确定要删除这个角色吗？"
+              onConfirm={() => handleDeleteRole(record.id)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button type="link" danger icon={<DeleteOutlined />}>
+                删除
+              </Button>
+            </Popconfirm>
+          </PermissionGuard>
         </Space>
       ),
     },
@@ -406,23 +814,27 @@ const PermissionManagement: React.FC = () => {
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEditUser(record)}
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这个用户吗？"
-            onConfirm={() => handleDeleteUser(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              删除
+          <PermissionGuard resource="users" action="edit">
+            <Button
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => handleEditUser(record)}
+            >
+              编辑
             </Button>
-          </Popconfirm>
+          </PermissionGuard>
+          <PermissionGuard resource="users" action="delete">
+            <Popconfirm
+              title="确定要删除这个用户吗？"
+              onConfirm={() => handleDeleteUser(record.id)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button type="link" danger icon={<DeleteOutlined />}>
+                删除
+              </Button>
+            </Popconfirm>
+          </PermissionGuard>
         </Space>
       ),
     },
@@ -436,9 +848,11 @@ const PermissionManagement: React.FC = () => {
         <div>
           <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
             <h2>权限列表</h2>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddPermission}>
-              新增权限
-            </Button>
+            <PermissionGuard resource="permissions" action="create">
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAddPermission}>
+                新增权限
+              </Button>
+            </PermissionGuard>
           </div>
           <Table
             columns={permissionColumns}
@@ -462,9 +876,11 @@ const PermissionManagement: React.FC = () => {
         <div>
           <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
             <h2>角色列表</h2>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRole}>
-              新增角色
-            </Button>
+            <PermissionGuard resource="roles" action="create">
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRole}>
+                新增角色
+              </Button>
+            </PermissionGuard>
           </div>
           <Table
             columns={roleColumns}
@@ -488,9 +904,11 @@ const PermissionManagement: React.FC = () => {
         <div>
           <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
             <h2>用户列表</h2>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddUser}>
-              新增用户
-            </Button>
+            <PermissionGuard resource="users" action="create">
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAddUser}>
+                新增用户
+              </Button>
+            </PermissionGuard>
           </div>
           <Table
             columns={userColumns}
@@ -681,6 +1099,17 @@ const PermissionManagement: React.FC = () => {
             ]}
           >
             <Input />
+          </Form.Item>
+
+          <Form.Item
+            label="密码"
+            name="password"
+            rules={[
+              { required: !editingUser, message: '请输入密码' },
+              { min: 6, message: '密码至少6位' }
+            ]}
+          >
+            <Input.Password placeholder={editingUser ? '留空则不修改密码' : '请输入密码'} />
           </Form.Item>
 
           <Form.Item

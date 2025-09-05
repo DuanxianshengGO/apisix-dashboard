@@ -2,6 +2,7 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from 'antd'
 import { AuthProvider } from './contexts/AuthContext'
+import { PermissionProvider } from './contexts/PermissionContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
@@ -37,17 +38,19 @@ const MainLayout: React.FC = () => {
 function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route 
-          path="/*" 
-          element={
-            <ProtectedRoute>
-              <MainLayout />
-            </ProtectedRoute>
-          } 
-        />
-      </Routes>
+      <PermissionProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route 
+            path="/*" 
+            element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </PermissionProvider>
     </AuthProvider>
   )
 }
