@@ -22,12 +22,32 @@ const Login: React.FC = () => {
   const onFinish = async (values: LoginForm) => {
     setLoading(true)
     try {
-      // 首先尝试权限系统登录
-      const permissionSuccess = await permissionLogin(values.username, values.password)
+      // 首先尝试原有的API认证系统（支持configmap中的管理员账号）
+      const authSuccess = await login(values.username, values.password)
       
-      if (permissionSuccess) {
-        // 权限系统登录成功，也调用原有的认证系统
-        const authSuccess = await login(values.username, values.password)
+      if (authSuccess) {
+        // API认证成功，尝试权限系统登录
+        let permissionSuccess = await permissionLogin(values.username, values.password)
+        
+        // 如果权限系统中没有该用户，为原有管理员账号创建权限记录
+        if (!permissionSuccess && values.username === 'admin') {
+          // 为原有管理员账号在权限系统中创建记录
+          const users = JSON.parse(localStorage.getItem('users') || '[]')
+          const adminUser = {
+            id: 'admin-original',
+            username: 'admin',
+            password: values.password, // 使用输入的密码
+            role: 'admin',
+            status: 'active',
+            email: 'admin@apisix.local',
+            createTime: new Date().toISOString()
+          }
+          users.push(adminUser)
+          localStorage.setItem('users', JSON.stringify(users))
+          
+          // 再次尝试权限系统登录
+          permissionSuccess = await permissionLogin(values.username, values.password)
+        }
         
         // 记录登录成功的审计日志
         auditService.logLogin(values.username, '1', true)
@@ -35,10 +55,21 @@ const Login: React.FC = () => {
         message.success('登录成功')
         navigate('/dashboard')
       } else {
-        // 记录登录失败的审计日志
-        auditService.logLogin(values.username, 'unknown', false, '用户名或密码错误')
+        // API认证失败，尝试权限系统登录（支持新创建的账号）
+        const permissionSuccess = await permissionLogin(values.username, values.password)
         
-        message.error('用户名或密码错误')
+        if (permissionSuccess) {
+          // 记录登录成功的审计日志
+          auditService.logLogin(values.username, '1', true)
+          
+          message.success('登录成功')
+          navigate('/dashboard')
+        } else {
+          // 记录登录失败的审计日志
+          auditService.logLogin(values.username, 'unknown', false, '用户名或密码错误')
+          
+          message.error('用户名或密码错误')
+        }
       }
     } catch (error: any) {
       console.error('Login error:', error)
@@ -121,8 +152,8 @@ const Login: React.FC = () => {
         </Form>
         
         <div style={{ textAlign: 'center', marginTop: 16, color: '#999', fontSize: '12px' }}>
-          <p>默认账户: admin / admin123</p>
-          <p>开发账户: dev / dev123 (只读权限)</p>
+          <p>原有管理员: admin / admin</p>
+          <p>新建账户: dev / dev123 (只读权限)</p>
         </div>
       </Card>
     </div>
