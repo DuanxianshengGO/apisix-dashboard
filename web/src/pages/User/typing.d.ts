@@ -29,14 +29,14 @@ declare namespace UserModule {
   };
 
   type LoginData = {
-    [string]: string;
+    [key: string]: string;
   };
 
   type LoginResponse = {
     status: boolean;
     message: string;
     data: {
-      [string]: any;
+      [key: string]: any;
     };
   };
 }
