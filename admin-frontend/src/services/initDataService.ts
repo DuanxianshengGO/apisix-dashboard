@@ -308,6 +308,16 @@ const defaultRoles: Role[] = [
 // 默认用户数据
 const defaultUsers: User[] = [
   {
+    id: 'admin-default',
+    username: 'admin',
+    email: 'admin@apisix.local',
+    password: 'admin',
+    role: 'admin',
+    status: 'active',
+    createTime: new Date().toISOString(),
+    updateTime: new Date().toISOString()
+  },
+  {
     id: 'dev-user',
     username: 'dev',
     email: 'dev@apisix.local',
@@ -379,8 +389,16 @@ class InitDataService {
     localStorage.removeItem('roles')
     localStorage.removeItem('users')
     localStorage.removeItem('currentUser')
+    localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_username')
     this.initializeData()
     console.log('权限系统数据已重置')
+  }
+
+  // 强制重新初始化（用于修复数据问题）
+  forceReinitialize(): void {
+    console.log('强制重新初始化权限系统数据...')
+    this.resetData()
   }
 }
 

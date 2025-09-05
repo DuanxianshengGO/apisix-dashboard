@@ -56,6 +56,15 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({ children
     if (initDataService.needsInitialization()) {
       initDataService.initializeData()
     }
+    
+    // 检查是否有admin用户，如果没有则强制重新初始化
+    const users = JSON.parse(localStorage.getItem('users') || '[]')
+    const hasAdminUser = users.some((user: User) => user.username === 'admin')
+    if (!hasAdminUser) {
+      console.log('未找到admin用户，强制重新初始化...')
+      initDataService.forceReinitialize()
+    }
+    
     loadData()
     loadCurrentUser()
   }, [])

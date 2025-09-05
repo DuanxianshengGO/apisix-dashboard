@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug LocalStorage</title>
+</head>
+<body>
+    <h1>LocalStorage Debug</h1>
+    <div id="output"></div>
+    
+    <script>
+        function debugStorage() {
+            const output = document.getElementById('output');
+            let html = '';
+            
+            // 检查所有localStorage项目
+            html += '<h2>所有 LocalStorage 项目:</h2>';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                html += `<h3>${key}:</h3>`;
+                html += `<pre>${value}</pre>`;
+            }
+            
+            // 特别检查用户相关数据
+            html += '<h2>用户相关数据:</h2>';
+            const users = localStorage.getItem('users');
+            const currentUser = localStorage.getItem('currentUser');
+            const adminToken = localStorage.getItem('admin_token');
+            const adminUsername = localStorage.getItem('admin_username');
+            
+            html += `<h3>users:</h3><pre>${users || '未找到'}</pre>`;
+            html += `<h3>currentUser:</h3><pre>${currentUser || '未找到'}</pre>`;
+            html += `<h3>admin_token:</h3><pre>${adminToken || '未找到'}</pre>`;
+            html += `<h3>admin_username:</h3><pre>${adminUsername || '未找到'}</pre>`;
+            
+            // 添加重置按钮
+            html += '<h2>操作:</h2>';
+            html += '<button onclick="resetStorage()">重置所有数据</button>';
+            html += '<button onclick="initDefaultData()">初始化默认数据</button>';
+            html += '<button onclick="location.reload()">刷新页面</button>';
+            
+            output.innerHTML = html;
+        }
+        
+        function resetStorage() {
+            localStorage.clear();
+            alert('LocalStorage已清空');
+            location.reload();
+        }
+        
+        function initDefaultData() {
+            // 初始化默认用户数据
+            const defaultUsers = [
+                {
+                    id: 'dev-user',
+                    username: 'dev',
+                    email: 'dev@apisix.local',
+                    password: 'dev123',
+                    role: 'viewer',
+                    status: 'active',
+                    createTime: new Date().toISOString(),
+                    updateTime: new Date().toISOString()
+                },
+                {
+                    id: 'admin-original',
+                    username: 'admin',
+                    password: 'admin',
+                    role: 'admin',
+                    status: 'active',
+                    email: 'admin@apisix.local',
+                    createTime: new Date().toISOString(),
+                    updateTime: new Date().toISOString()
+                }
+            ];
+            
+            localStorage.setItem('users', JSON.stringify(defaultUsers));
+            alert('默认用户数据已初始化');
+            location.reload();
+        }
+        
+        // 页面加载时执行
+        debugStorage();
+    </script>
+</body>
+</html>
