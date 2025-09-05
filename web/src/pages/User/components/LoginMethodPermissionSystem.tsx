@@ -18,31 +18,31 @@ import React from 'react';
 import { Form, Input, Tooltip } from 'antd';
 import type { FormInstance } from 'antd/lib/form';
 import { UserOutlined, LockTwoTone } from '@ant-design/icons';
-import { request, formatMessage } from 'umi';
+import { request } from 'umi';
 
 import type { UserModule } from '@/pages/User/typing';
 
 const formRef = React.createRef<FormInstance>();
 
-const LoginMethodPassword: UserModule.LoginMethod = {
-  id: 'password',
-  name: formatMessage({ id: 'component.user.loginMethodPassword' }),
+const LoginMethodPermissionSystem: UserModule.LoginMethod = {
+  id: 'permission-system',
+  name: '权限系统登录',
   render: () => {
     return (
-      <Form ref={formRef} name="control-ref">
+      <Form ref={formRef} name="permission-system-form">
         <Form.Item
           name="username"
           rules={[
             {
               required: true,
-              message: formatMessage({ id: 'component.user.loginMethodPassword.inputUsername' }),
+              message: '请输入用户名！',
             },
           ]}
         >
           <Input
             size="large"
             type="text"
-            placeholder={formatMessage({ id: 'component.user.loginMethodPassword.username' })}
+            placeholder="用户名"
             prefix={
               <UserOutlined
                 style={{
@@ -57,27 +57,15 @@ const LoginMethodPassword: UserModule.LoginMethod = {
           rules={[
             {
               required: true,
-              message: formatMessage({ id: 'component.user.loginMethodPassword.inputPassword' }),
+              message: '请输入密码！',
             },
           ]}
         >
-          <Input
-            size="large"
-            type="password"
-            placeholder={formatMessage({ id: 'component.user.loginMethodPassword.password' })}
-            prefix={<LockTwoTone />}
-          />
+          <Input size="large" type="password" placeholder="密码" prefix={<LockTwoTone />} />
         </Form.Item>
         <Form.Item>
-          <Tooltip
-            title={formatMessage({ id: 'component.user.loginMethodPassword.modificationMethod' })}
-          >
-            <a
-              href="https://github.com/apache/apisix-dashboard/blob/master/api/conf/conf.yaml#L70-L75"
-              target="_blank"
-            >
-              {formatMessage({ id: 'component.user.loginMethodPassword.changeDefaultAccount' })}
-            </a>
+          <Tooltip title="通过权限管理系统创建的用户账号">
+            <span style={{ color: '#666', fontSize: '12px' }}>使用权限系统账号登录</span>
           </Tooltip>
         </Form.Item>
       </Form>
@@ -107,7 +95,8 @@ const LoginMethodPassword: UserModule.LoginMethod = {
   submit: async ({ username, password }) => {
     if (username !== '' && password !== '') {
       try {
-        const result = await request('/apisix/admin/user/login', {
+        // 调用权限系统的登录API
+        const result = await request('/api/permission/login', {
           method: 'POST',
           requestType: 'json',
           data: {
@@ -116,31 +105,41 @@ const LoginMethodPassword: UserModule.LoginMethod = {
           },
         });
 
-        localStorage.setItem('token', result.data.token);
+        if (result.success) {
+          // 存储用户信息和token
+          localStorage.setItem('permission_token', result.data.token || 'permission_user');
+          localStorage.setItem('permission_user', JSON.stringify(result.data.user));
+
+          return {
+            status: true,
+            message: '登录成功',
+            data: result.data,
+          };
+        }
         return {
-          status: true,
-          message: formatMessage({ id: 'component.user.loginMethodPassword.success' }),
+          status: false,
+          message: result.message || '登录失败',
           data: [],
         };
       } catch (e) {
-        // NOTE: API failed, using errorHandler
         return {
           status: false,
-          message: '',
+          message: '网络错误，请稍后重试',
           data: [],
         };
       }
     } else {
       return {
         status: false,
-        message: formatMessage({ id: 'component.user.loginMethodPassword.fieldInvalid' }),
+        message: '请检查用户名和密码',
         data: [],
       };
     }
   },
   logout: () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('permission_token');
+    localStorage.removeItem('permission_user');
   },
 };
 
-export default LoginMethodPassword;
+export default LoginMethodPermissionSystem;

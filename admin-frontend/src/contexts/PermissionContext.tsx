@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import initDataService from '../services/initDataService'
 
 interface Permission {
   id: string
@@ -51,6 +52,10 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({ children
   const [roles, setRoles] = useState<Role[]>([])
 
   useEffect(() => {
+    // 初始化权限系统数据
+    if (initDataService.needsInitialization()) {
+      initDataService.initializeData()
+    }
     loadData()
     loadCurrentUser()
   }, [])

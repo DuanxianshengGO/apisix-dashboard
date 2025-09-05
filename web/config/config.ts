@@ -28,6 +28,9 @@ export default defineConfig({
   dva: {
     hmr: true,
   },
+  devServer: {
+    port: 80,
+  },
   locale: {
     default: 'en-US',
     antd: true,

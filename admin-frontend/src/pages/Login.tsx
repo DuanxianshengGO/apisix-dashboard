@@ -33,17 +33,23 @@ const Login: React.FC = () => {
         if (!permissionSuccess && values.username === 'admin') {
           // 为原有管理员账号在权限系统中创建记录
           const users = JSON.parse(localStorage.getItem('users') || '[]')
-          const adminUser = {
-            id: 'admin-original',
-            username: 'admin',
-            password: values.password, // 使用输入的密码
-            role: 'admin',
-            status: 'active',
-            email: 'admin@apisix.local',
-            createTime: new Date().toISOString()
+          
+          // 检查是否已存在admin用户
+          const existingAdmin = users.find((u: any) => u.username === 'admin')
+          if (!existingAdmin) {
+            const adminUser = {
+              id: 'admin-original',
+              username: 'admin',
+              password: values.password, // 使用输入的密码
+              role: 'admin', // 使用admin角色ID
+              status: 'active',
+              email: 'admin@apisix.local',
+              createTime: new Date().toISOString(),
+              updateTime: new Date().toISOString()
+            }
+            users.push(adminUser)
+            localStorage.setItem('users', JSON.stringify(users))
           }
-          users.push(adminUser)
-          localStorage.setItem('users', JSON.stringify(users))
           
           // 再次尝试权限系统登录
           permissionSuccess = await permissionLogin(values.username, values.password)

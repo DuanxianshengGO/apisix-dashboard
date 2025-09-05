@@ -20,6 +20,7 @@ import { Button, notification, Tabs } from 'antd';
 import { SelectLang } from '@@/plugin-locale/SelectLang';
 import { Link, useIntl, history } from 'umi';
 import LoginMethodPassword from '@/pages/User/components/LoginMethodPassword';
+import LoginMethodPermissionSystem from '@/pages/User/components/LoginMethodPermissionSystem';
 import type { UserModule } from '@/pages/User/typing';
 import logo from '@/assets/logo.svg';
 import { getUrlQuery } from '@/helpers';
@@ -31,7 +32,7 @@ const Tab = Tabs.TabPane;
 /**
  * Login Methods List
  */
-const loginMethods: UserModule.LoginMethod[] = [LoginMethodPassword];
+const loginMethods: UserModule.LoginMethod[] = [LoginMethodPassword, LoginMethodPermissionSystem];
 
 /**
  * User Login Page
@@ -81,7 +82,7 @@ const Page: React.FC = () => {
     }
   };
 
-  if (localStorage.getItem('token')) {
+  if (localStorage.getItem('token') || localStorage.getItem('permission_token')) {
     history.replace('/');
     return null;
   }
