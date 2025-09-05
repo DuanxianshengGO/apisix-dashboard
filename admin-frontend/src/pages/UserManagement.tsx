@@ -60,16 +60,17 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     setLoading(true)
     try {
-      // 这里应该调用实际的API
-      // const response = await fetch('/api/users')
-      // const data = await response.json()
-      // setUsers(data)
-      
-      // 模拟API调用
-      setTimeout(() => {
+      // 从localStorage加载用户数据
+      const savedUsers = localStorage.getItem('users')
+      if (savedUsers) {
+        const users = JSON.parse(savedUsers)
+        setUsers(users)
+      } else {
+        // 如果没有保存的数据，使用默认数据并保存
         setUsers(mockUsers)
-        setLoading(false)
-      }, 1000)
+        localStorage.setItem('users', JSON.stringify(mockUsers))
+      }
+      setLoading(false)
     } catch (error) {
       message.error('获取用户列表失败')
       setLoading(false)
@@ -93,7 +94,12 @@ const UserManagement: React.FC = () => {
       // 这里应该调用实际的API
       // await fetch(`/api/users/${id}`, { method: 'DELETE' })
       
-      setUsers(users.filter(user => user.id !== id))
+      const updatedUsers = users.filter(user => user.id !== id)
+      setUsers(updatedUsers)
+      
+      // 保存到localStorage
+      localStorage.setItem('users', JSON.stringify(updatedUsers))
+      
       message.success('删除成功')
     } catch (error) {
       message.error('删除失败')
@@ -102,10 +108,13 @@ const UserManagement: React.FC = () => {
 
   const handleSubmit = async (values: any) => {
     try {
+      let updatedUsers: User[]
+      
       if (editingUser) {
         // 更新用户
         const updatedUser = { ...editingUser, ...values, updateTime: new Date().toLocaleString() }
-        setUsers(users.map(user => user.id === editingUser.id ? updatedUser : user))
+        updatedUsers = users.map(user => user.id === editingUser.id ? updatedUser : user)
+        setUsers(updatedUsers)
         message.success('更新成功')
       } else {
         // 新增用户
@@ -115,9 +124,14 @@ const UserManagement: React.FC = () => {
           createTime: new Date().toLocaleString(),
           updateTime: new Date().toLocaleString(),
         }
-        setUsers([...users, newUser])
+        updatedUsers = [...users, newUser]
+        setUsers(updatedUsers)
         message.success('添加成功')
       }
+      
+      // 保存到localStorage
+      localStorage.setItem('users', JSON.stringify(updatedUsers))
+      
       setModalVisible(false)
       form.resetFields()
     } catch (error) {
